@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint
 import pandas as pd
 import SimpleITK as sitk
 
@@ -12,12 +12,20 @@ import SimpleITK as sitk
 
 # 1. Define the Dataset and DataLoader
 class MRI2CTDataset(Dataset):
-    def __init__(self, data_path_df, transform=None):
+    def __init__(self, data_path_df, transform=None, resize=True):
         self.df = pd.read_csv(data_path_df)
         self.transform = transform
+        self.resize = resize
 
     def __len__(self):
         return len(self.df)
+    
+    def resize_image(self, image, target_size):
+        # Resize the 3D image to the target size
+        image_resized = nn.functional.interpolate(
+            image.unsqueeze(0), size=target_size, mode='trilinear', align_corners=False
+        )
+        return image_resized.squeeze(0) 
 
     def __getitem__(self, idx):
         mri_path = self.df.iloc[idx]['mri_paths']
@@ -32,26 +40,29 @@ class MRI2CTDataset(Dataset):
         ct_image = torch.tensor(ct_image_np, dtype=torch.float32).unsqueeze(0)
         mask_image = torch.tensor(mask_image_np, dtype=torch.float32).unsqueeze(0)
 
-        if self.transform:
-            mri_image = self.transform(mri_image)
-            ct_image = self.transform(ct_image)
+        if self.resize:
+            mri_image = self.resize_image(mri_image, (28,28,28))
+            ct_image = self.resize_image(ct_image, (28,28,28))
         return mri_image, ct_image
 
-def get_dataloader(mri_data, ct_data, batch_size=1, transform=None):
-    dataset = MRI2CTDataset(mri_data, ct_data, transform=transform)
+def get_dataloader(data_path_df, batch_size=1, transform=None):
+    dataset = MRI2CTDataset(data_path_df, transform=transform)
     return DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 # 2. Define a simple one-layer CNN model (replaceable in the future)
-class SimpleCNN(nn.Module):
+class EncoderDecoder(nn.Module):
     def __init__(self):
-        super(SimpleCNN, self).__init__()
-        self.encoder = nn.Sequential(nn.Linear(28 * 28, 64), nn.ReLU(), nn.Linear(64, 3))
-        self.decoder = nn.Sequential(nn.Linear(3, 64), nn.ReLU(), nn.Linear(64, 28 * 28))
+        super(EncoderDecoder, self).__init__()
+        self.encoder = nn.Conv3d(in_channels=1, out_channels=16, kernel_size=3, stride=2, padding=1)
+        self.decoder = nn.ConvTranspose3d(in_channels=16, out_channels=1, kernel_size=3, stride=2, padding=1, output_padding=1)
+        # self.encoder = nn.Sequential(nn.Linear(28 * 28, 64), nn.ReLU(), nn.Linear(64, 3))
+        # self.decoder = nn.Sequential(nn.Linear(3, 64), nn.ReLU(), nn.Linear(64, 28 * 28))
 
     def forward(self, x):
         z = self.encoder(x)
+        z = torch.relu(z)
         x_hat = self.decoder(z)
-        return x_hat
+        return torch.sigmoid(x_hat)
 
 # 3. Define the Lightning Module
 class MRItoCTTranslator(pl.LightningModule):
@@ -62,47 +73,62 @@ class MRItoCTTranslator(pl.LightningModule):
         self.learning_rate = learning_rate
 
     def forward(self, x):
-        # Forward pass
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        # Single training step
         mri_image, ct_image = batch
         pred_ct_image = self(mri_image)
         loss = self.loss_fn(pred_ct_image, ct_image)
         self.log("train_loss", loss)
         return loss
+    
+    def validation_step(self, batch, batch_idx):
+        mri_image, ct_image = batch
+        pred_ct_image = self(mri_image)
+        val_loss = self.loss_fn(pred_ct_image, ct_image)
+        self.log("val_loss", val_loss, prog_bar=True)
+        return val_loss
+
+    def test_step(self, batch, batch_idx):
+        mri_image, ct_image = batch
+        pred_ct_image = self(mri_image)
+        test_loss = self.loss_fn(pred_ct_image, ct_image)
+        self.log("test_loss", test_loss, prog_bar=True)
+        return test_loss
 
     def configure_optimizers(self):
-        # Define optimizer and learning rate scheduler
         optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
         lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
-        return {"optimizer": optimizer, "lr_scheduler": lr_scheduler, "monitor": "train_loss"}
+        return {"optimizer": optimizer, "lr_scheduler": lr_scheduler, "monitor": "val_loss"}
 
 # 4. Training Setup and Execution
-def train_model(mri_data, ct_data, model, batch_size=1, max_epochs=50, learning_rate=1e-3):
+# def train_model(mri_data, ct_data, model, batch_size=1, max_epochs=50, learning_rate=1e-3):
     # Get the data loader
-    transform = None  # Define any necessary transforms
-    dataloader = get_dataloader(mri_data, ct_data, batch_size, transform)
 
-    # Initialize model
-    translator_model = MRItoCTTranslator(model, learning_rate)
+train_path_df = "../dataset/train.csv"
+val_path_df = "../dataset/val.csv"
+test_path_df = "../dataset/test.csv"
+transform = None  # Define any necessary transforms
+train_dataloader = get_dataloader(train_path_df, batch_size=1, transform=None)
+val_dataloader = get_dataloader(val_path_df, batch_size=1, transform=None)
+test_dataloader = get_dataloader(test_path_df, batch_size=1, transform=None)
 
-    # Define callbacks
-    lr_monitor = LearningRateMonitor(logging_interval='step')
-    checkpoint_callback = ModelCheckpoint(monitor="train_loss")
 
-    # Trainer setup
-    trainer = pl.Trainer(
-        max_epochs=max_epochs,
-        callbacks=[lr_monitor, checkpoint_callback],
-        log_every_n_steps=10,
-    )
+model = EncoderDecoder()
+pl_model = MRItoCTTranslator(model, learning_rate=1e-3)
 
-    # Train the model
-    trainer.fit(translator_model, dataloader)
+# Define callbacks
+checkpoint_callback = ModelCheckpoint(monitor="val_loss")
 
-# Usage Example
-# Assuming you have MRI and CT data loaded as mri_data and ct_data
-model = SimpleCNN()
-train_model(mri_data, ct_data, model, batch_size=32, max_epochs=50, learning_rate=1e-3)
+# Trainer setup
+trainer = pl.Trainer(
+    max_epochs=2,
+    callbacks=[checkpoint_callback],
+    log_every_n_steps=1,
+)
+
+# Train the model
+trainer.fit(pl_model, train_dataloader, val_dataloader)
+
+# Test
+trainer.test(pl_model, test_dataloader)
