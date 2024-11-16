@@ -1,6 +1,3 @@
 venv/
-*.nii
-*.pth
-*.mat
-venv39/
+data/
 lightning_logs/
