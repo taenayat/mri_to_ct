@@ -2,3 +2,5 @@ venv/
 *.nii
 *.pth
 *.mat
+venv39/
+lightning_logs/
