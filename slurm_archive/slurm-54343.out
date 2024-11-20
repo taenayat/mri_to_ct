@@ -1,0 +1,5 @@
+ENTERED THE FILE!
+Traceback (most recent call last):
+  File "neckmask.py", line 13, in <module>
+    logger.setFormatter(logging.Formatter("%(asctime)s;%(levelname)s;%(message)s"))
+AttributeError: 'Logger' object has no attribute 'setFormatter'

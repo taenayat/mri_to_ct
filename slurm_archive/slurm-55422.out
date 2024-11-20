@@ -1,0 +1,82 @@
+Using ./mri_to_ct/experiments/cyclegan.yaml experiment
+2024-11-15 14:15:03.872 | WARNING  | ganslate.utils.environment:setup_threading:90 - 
+    Max threads for SimpleITK and Opencv set to 1
+    For numpy etc. set OMP_NUM_THREADS=1 as an env var while running the training script,
+    e.g., OMP_NUM_THREADS=1 python tools/train.py ...
+    
+2024-11-15 14:15:03.911 | INFO     | ganslate.configs.utils:init_config:29 - Project directory ./mri_to_ct/ added to the path as `project` to allow imports of modules from it.
+/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/memcnn/models/revop.py:24: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is deprecated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
+  @custom_fwd(cast_inputs=torch.float32)
+/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/memcnn/models/revop.py:74: FutureWarning: `torch.cuda.amp.custom_bwd(args...)` is deprecated. Please use `torch.amp.custom_bwd(args..., device_type='cuda')` instead.
+  def backward(ctx, *grad_outputs):  # pragma: no cover
+Traceback (most recent call last):
+  File "/mnt/homeGPU/tenayat/conda4ganslate/bin/ganslate", line 8, in <module>
+    sys.exit(interface())
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/click/core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/click/core.py", line 1078, in main
+    rv = self.invoke(ctx)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/click/core.py", line 1688, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/click/core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/click/core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/ganslate/utils/cli/interface.py", line 25, in train
+    init_engine('train', omegaconf_args).run()
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/ganslate/engines/utils.py", line 21, in init_engine
+    conf = build_conf(omegaconf_args)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/ganslate/utils/builders.py", line 23, in build_conf
+    conf = init_config(yaml_conf, config_class=Config)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/ganslate/configs/utils.py", line 36, in init_config
+    return OmegaConf.merge(OmegaConf.structured(config_class), conf)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/omegaconf.py", line 273, in merge
+    target.merge_with(*configs[1:])
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/basecontainer.py", line 492, in merge_with
+    self._format_and_raise(key=None, value=None, cause=e)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/base.py", line 231, in _format_and_raise
+    format_and_raise(
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/_utils.py", line 819, in format_and_raise
+    _raise(ex, cause)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/_utils.py", line 797, in _raise
+    raise ex.with_traceback(sys.exc_info()[2])  # set env var OC_CAUSE=1 for full trace
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/basecontainer.py", line 490, in merge_with
+    self._merge_with(*others)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/basecontainer.py", line 514, in _merge_with
+    BaseContainer._map_merge(self, other)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/basecontainer.py", line 399, in _map_merge
+    dest_node._merge_with(src_node)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/basecontainer.py", line 514, in _merge_with
+    BaseContainer._map_merge(self, other)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/basecontainer.py", line 432, in _map_merge
+    dest[key] = src._get_node(key)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/dictconfig.py", line 310, in __setitem__
+    self._format_and_raise(
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/base.py", line 231, in _format_and_raise
+    format_and_raise(
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/_utils.py", line 819, in format_and_raise
+    _raise(ex, cause)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/_utils.py", line 797, in _raise
+    raise ex.with_traceback(sys.exc_info()[2])  # set env var OC_CAUSE=1 for full trace
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/dictconfig.py", line 308, in __setitem__
+    self.__set_impl(key=key, value=value)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/dictconfig.py", line 318, in __set_impl
+    self._set_item_impl(key, value)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/basecontainer.py", line 545, in _set_item_impl
+    self._validate_set(key, value)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/dictconfig.py", line 180, in _validate_set
+    target = self._get_node(key) if key is not None else self
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/dictconfig.py", line 475, in _get_node
+    self._validate_get(key)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/dictconfig.py", line 164, in _validate_get
+    self._format_and_raise(
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/base.py", line 231, in _format_and_raise
+    format_and_raise(
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/_utils.py", line 899, in format_and_raise
+    _raise(ex, cause)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/omegaconf/_utils.py", line 797, in _raise
+    raise ex.with_traceback(sys.exc_info()[2])  # set env var OC_CAUSE=1 for full trace
+omegaconf.errors.ConfigKeyError: Key 'tensorboard' not in 'TrainConfig'
+    full_key: train.tensorboard
+    reference_type=TrainConfig
+    object_type=TrainConfig

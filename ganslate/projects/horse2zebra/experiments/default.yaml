@@ -1,0 +1,65 @@
+project: "/home/chinmay/git/ganslate/projects/horse2zebra"
+
+train:
+    output_dir: "/home/chinmay/git/ganslate/checkpoints/horse2zebra_default"
+    cuda: True
+    n_iters: 117700        # (1177 [dataset_size] * 100)
+    n_iters_decay: 117700
+    batch_size: 1
+    mixed_precision: False
+
+    logging:
+        freq: 500
+        wandb:
+            project: "horse2zebra"
+    
+    checkpointing:
+        freq: 20000
+
+    dataset: 
+        _target_: ganslate.data.UnpairedImageDataset
+        root: "/home/chinmay/Datasets/horse2zebra/train/"
+        num_workers: 16
+        image_channels: 3
+        preprocess: ["resize", "random_flip"]
+        load_size: [128, 128]   # (H, W)
+        final_size: [128, 128]  # (H, W)
+        
+    gan:  
+        _target_: ganslate.nn.gans.unpaired.CycleGAN
+
+        generator:  
+            _target_: ganslate.nn.generators.Resnet2D
+            n_residual_blocks: 9
+            in_out_channels:
+                AB: [3, 3]
+
+        discriminator:  
+            _target_: ganslate.nn.discriminators.PatchGAN2D
+            n_layers: 3
+            in_channels:
+                B: 3
+
+        optimizer:
+            lambda_AB: 10.0
+            lambda_BA: 10.0
+            lambda_identity: 0
+            proportion_ssim: 0
+            lr_D: 0.0002
+            lr_G: 0.0002
+    
+    metrics:
+        discriminator_evolution: True
+        ssim: True
+
+infer:
+    checkpointing:
+        load_iter: 1
+    dataset:
+        _target_: ganslate.data.UnpairedImageDataset
+        root: "/home/chinmay/Datasets/horse2zebra/test/"
+        num_workers: 16
+        image_channels: 3
+        preprocess: ["resize"]
+        load_size: [128, 128]   # (H, W)
+        final_size: [128, 128]  # (H, W)

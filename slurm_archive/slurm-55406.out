@@ -1,0 +1,28 @@
+Using ./mri_to_ct/experiments/cyclegan.yaml experiment
+2024-11-15 12:03:18.986 | WARNING  | ganslate.utils.environment:setup_threading:90 - 
+    Max threads for SimpleITK and Opencv set to 1
+    For numpy etc. set OMP_NUM_THREADS=1 as an env var while running the training script,
+    e.g., OMP_NUM_THREADS=1 python tools/train.py ...
+    
+Traceback (most recent call last):
+  File "/mnt/homeGPU/tenayat/conda4ganslate/bin/ganslate", line 8, in <module>
+    sys.exit(interface())
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/click/core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/click/core.py", line 1078, in main
+    rv = self.invoke(ctx)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/click/core.py", line 1688, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/click/core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/click/core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/ganslate/utils/cli/interface.py", line 25, in train
+    init_engine('train', omegaconf_args).run()
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/ganslate/engines/utils.py", line 21, in init_engine
+    conf = build_conf(omegaconf_args)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/ganslate/utils/builders.py", line 23, in build_conf
+    conf = init_config(yaml_conf, config_class=Config)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/ganslate/configs/utils.py", line 22, in init_config
+    assert project_path.is_file(), f"No `__init__.py` in project `{project_path}`."
+AssertionError: No `__init__.py` in project `/mnt/homeGPU/tenayat/medical_image_translation/__init__.py`.

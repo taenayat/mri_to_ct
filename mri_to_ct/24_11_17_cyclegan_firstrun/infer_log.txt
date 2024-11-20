@@ -1,0 +1,220 @@
+[2024-11-16 11:07:26][ganslate.utils.environment][INFO] - Configuration:
+project: ./mri_to_ct/
+mode: infer
+train:
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_unpaired
+  batch_size: 1
+  cuda: true
+  mixed_precision: false
+  opt_level: O1
+  logging:
+    freq: 10
+    multi_modality_split: null
+    tensorboard: true
+    wandb: null
+    image_window: null
+  dataset:
+    _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
+    root: /mnt/homeGPU/tenayat/data/TRAIN
+    num_workers: 0
+    pin_memory: true
+    patch_size:
+    - 32
+    - 160
+    - 160
+    focal_region_proportion: 0.0
+    augmentation: false
+    unpaired: true
+  checkpointing:
+    load_iter: null
+    freq: 1000
+    start_after: 0
+    load_optimizers: true
+  n_iters: 20000
+  n_iters_decay: 5000
+  gan:
+    _target_: ganslate.nn.gans.unpaired.CycleGAN
+    norm_type: instance
+    weight_init_type: normal
+    weight_init_gain: 0.02
+    optimizer:
+      adversarial_loss_type: lsgan
+      beta1: 0.5
+      beta2: 0.999
+      lr_D: 0.0002
+      lr_G: 0.0004
+      lambda_AB: 5.0
+      lambda_BA: 5.0
+      lambda_identity: 0.0
+      proportion_ssim: 0.0
+    generator:
+      _target_: ganslate.nn.generators.Vnet3D
+      in_out_channels:
+        AB:
+        - 1
+        - 1
+        BA: ${train.gan.generator.in_out_channels.AB}
+      use_memory_saving: false
+      use_inverse: false
+      first_layer_channels: 16
+      down_blocks:
+      - 2
+      - 2
+      - 3
+      up_blocks:
+      - 3
+      - 3
+      - 3
+      is_separable: false
+    discriminator:
+      _target_: ganslate.nn.discriminators.PatchGAN3D
+      in_channels:
+        B: 1
+        A: ${train.gan.discriminator.in_channels.B}
+      ndf: 64
+      n_layers: 2
+      kernel_size:
+      - 4
+      - 4
+      - 4
+    pool_size: 50
+  seed: null
+  metrics:
+    discriminator_evolution: true
+    ssim: false
+val:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/VAL
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  freq: ${train.checkpointing.freq}
+  start_after: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    cycle_metrics: true
+    save_to_csv: true
+test:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  checkpointing:
+    load_iter: 23000
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    compute_over_input: false
+    save_to_csv: true
+infer:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.infer_dataset.SynthRAD2023InferDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  is_deployment: false
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  checkpointing:
+    load_iter: 23000
+
+[2024-11-16 11:07:26][ganslate.utils.environment][INFO] - Saving checkpoints, logs and config to: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_unpaired
+[2024-11-16 11:07:26][ganslate.utils.environment][INFO] - Python version: 3.9.20 (main, Oct  3 2024, 07:27:41) 
+[GCC 11.2.0]
+[2024-11-16 11:07:26][ganslate.utils.environment][INFO] - PyTorch version: 2.5.1+cu124
+[2024-11-16 11:07:26][ganslate.utils.environment][INFO] - CUDA 12.4 - cuDNN 90100
+[2024-11-16 11:07:26][ganslate.utils.environment][INFO] - Global rank: 0
+[2024-11-16 11:07:26][ganslate.utils.environment][INFO] - Local rank: 0
+[2024-11-16 11:07:26][ganslate.nn.generators.vnet.vnet3d][INFO] - Invertible layers are disabled.
+[2024-11-16 11:07:27][ganslate.nn.gans.base][INFO] - Loaded the checkpoint from `/mnt/homeGPU/tenayat/mri_to_ct/cyclegan_unpaired/checkpoints/23000.pth`
+[2024-11-16 11:07:27][ganslate.engines.inferer][INFO] - Inference started.
+[2024-11-16 11:07:33][ganslate.utils.trackers.inference][INFO] - ('1/45 - loading: 0.24s', ' | inference: 4.14s | saving: 1.68s')
+[2024-11-16 11:07:47][ganslate.utils.trackers.inference][INFO] - ('2/45 - loading: 0.68s', ' | inference: 5.00s | saving: 2.01s')
+[2024-11-16 11:08:01][ganslate.utils.trackers.inference][INFO] - ('3/45 - loading: 0.58s', ' | inference: 4.87s | saving: 1.87s')
+[2024-11-16 11:08:16][ganslate.utils.trackers.inference][INFO] - ('4/45 - loading: 0.71s', ' | inference: 5.23s | saving: 2.23s')
+[2024-11-16 11:08:32][ganslate.utils.trackers.inference][INFO] - ('5/45 - loading: 0.75s', ' | inference: 5.21s | saving: 2.33s')
+[2024-11-16 11:08:47][ganslate.utils.trackers.inference][INFO] - ('6/45 - loading: 0.64s', ' | inference: 4.89s | saving: 1.97s')
+[2024-11-16 11:09:02][ganslate.utils.trackers.inference][INFO] - ('7/45 - loading: 0.71s', ' | inference: 5.19s | saving: 2.28s')
+[2024-11-16 11:09:17][ganslate.utils.trackers.inference][INFO] - ('8/45 - loading: 0.60s', ' | inference: 4.89s | saving: 1.89s')
+[2024-11-16 11:09:31][ganslate.utils.trackers.inference][INFO] - ('9/45 - loading: 0.57s', ' | inference: 5.10s | saving: 1.85s')
+[2024-11-16 11:09:45][ganslate.utils.trackers.inference][INFO] - ('10/45 - loading: 0.60s', ' | inference: 4.82s | saving: 1.87s')
+[2024-11-16 11:09:59][ganslate.utils.trackers.inference][INFO] - ('11/45 - loading: 0.54s', ' | inference: 4.94s | saving: 1.62s')
+[2024-11-16 11:10:12][ganslate.utils.trackers.inference][INFO] - ('12/45 - loading: 0.56s', ' | inference: 5.10s | saving: 1.72s')
+[2024-11-16 11:10:25][ganslate.utils.trackers.inference][INFO] - ('13/45 - loading: 0.58s', ' | inference: 5.12s | saving: 1.94s')
+[2024-11-16 11:10:40][ganslate.utils.trackers.inference][INFO] - ('14/45 - loading: 0.56s', ' | inference: 4.87s | saving: 1.73s')
+[2024-11-16 11:10:53][ganslate.utils.trackers.inference][INFO] - ('15/45 - loading: 0.58s', ' | inference: 5.21s | saving: 1.85s')
+[2024-11-16 11:11:07][ganslate.utils.trackers.inference][INFO] - ('16/45 - loading: 0.55s', ' | inference: 4.77s | saving: 1.81s')
+[2024-11-16 11:11:20][ganslate.utils.trackers.inference][INFO] - ('17/45 - loading: 0.52s', ' | inference: 4.36s | saving: 1.34s')
+[2024-11-16 11:11:32][ganslate.utils.trackers.inference][INFO] - ('18/45 - loading: 0.57s', ' | inference: 4.63s | saving: 1.66s')
+[2024-11-16 11:11:46][ganslate.utils.trackers.inference][INFO] - ('19/45 - loading: 0.61s', ' | inference: 4.80s | saving: 1.82s')
+[2024-11-16 11:11:58][ganslate.utils.trackers.inference][INFO] - ('20/45 - loading: 0.44s', ' | inference: 4.47s | saving: 1.36s')
+[2024-11-16 11:12:10][ganslate.utils.trackers.inference][INFO] - ('21/45 - loading: 0.58s', ' | inference: 4.47s | saving: 1.64s')
+[2024-11-16 11:12:24][ganslate.utils.trackers.inference][INFO] - ('22/45 - loading: 0.61s', ' | inference: 5.26s | saving: 1.87s')
+[2024-11-16 11:12:39][ganslate.utils.trackers.inference][INFO] - ('23/45 - loading: 0.64s', ' | inference: 5.10s | saving: 1.90s')
+[2024-11-16 11:12:54][ganslate.utils.trackers.inference][INFO] - ('24/45 - loading: 0.59s', ' | inference: 4.97s | saving: 1.84s')
+[2024-11-16 11:13:08][ganslate.utils.trackers.inference][INFO] - ('25/45 - loading: 0.56s', ' | inference: 4.56s | saving: 1.69s')
+[2024-11-16 11:13:21][ganslate.utils.trackers.inference][INFO] - ('26/45 - loading: 0.54s', ' | inference: 4.36s | saving: 1.66s')
+[2024-11-16 11:13:33][ganslate.utils.trackers.inference][INFO] - ('27/45 - loading: 0.48s', ' | inference: 4.44s | saving: 1.48s')
+[2024-11-16 11:13:46][ganslate.utils.trackers.inference][INFO] - ('28/45 - loading: 0.61s', ' | inference: 4.96s | saving: 2.02s')
+[2024-11-16 11:14:02][ganslate.utils.trackers.inference][INFO] - ('29/45 - loading: 0.68s', ' | inference: 5.58s | saving: 2.00s')
+[2024-11-16 11:14:17][ganslate.utils.trackers.inference][INFO] - ('30/45 - loading: 0.55s', ' | inference: 5.02s | saving: 1.62s')
+[2024-11-16 11:14:30][ganslate.utils.trackers.inference][INFO] - ('31/45 - loading: 0.62s', ' | inference: 4.86s | saving: 1.85s')
+[2024-11-16 11:14:45][ganslate.utils.trackers.inference][INFO] - ('32/45 - loading: 0.59s', ' | inference: 4.86s | saving: 1.95s')
+[2024-11-16 11:14:58][ganslate.utils.trackers.inference][INFO] - ('33/45 - loading: 0.64s', ' | inference: 4.22s | saving: 1.95s')
+[2024-11-16 11:15:12][ganslate.utils.trackers.inference][INFO] - ('34/45 - loading: 0.62s', ' | inference: 4.30s | saving: 1.78s')
+[2024-11-16 11:15:25][ganslate.utils.trackers.inference][INFO] - ('35/45 - loading: 0.65s', ' | inference: 4.70s | saving: 1.98s')
+[2024-11-16 11:15:39][ganslate.utils.trackers.inference][INFO] - ('36/45 - loading: 0.64s', ' | inference: 4.42s | saving: 1.95s')
+[2024-11-16 11:15:53][ganslate.utils.trackers.inference][INFO] - ('37/45 - loading: 0.61s', ' | inference: 4.81s | saving: 2.03s')
+[2024-11-16 11:16:08][ganslate.utils.trackers.inference][INFO] - ('38/45 - loading: 0.60s', ' | inference: 5.04s | saving: 1.87s')
+[2024-11-16 11:16:26][ganslate.utils.trackers.inference][INFO] - ('39/45 - loading: 0.76s', ' | inference: 7.28s | saving: 2.51s')
+[2024-11-16 11:16:42][ganslate.utils.trackers.inference][INFO] - ('40/45 - loading: 0.66s', ' | inference: 5.15s | saving: 2.08s')
+[2024-11-16 11:16:58][ganslate.utils.trackers.inference][INFO] - ('41/45 - loading: 0.84s', ' | inference: 5.23s | saving: 2.64s')
+[2024-11-16 11:17:14][ganslate.utils.trackers.inference][INFO] - ('42/45 - loading: 0.59s', ' | inference: 4.64s | saving: 1.69s')
+[2024-11-16 11:17:28][ganslate.utils.trackers.inference][INFO] - ('43/45 - loading: 0.57s', ' | inference: 4.38s | saving: 1.82s')
+[2024-11-16 11:17:41][ganslate.utils.trackers.inference][INFO] - ('44/45 - loading: 0.62s', ' | inference: 4.17s | saving: 1.88s')
+[2024-11-16 11:17:56][ganslate.utils.trackers.inference][INFO] - ('45/45 - loading: 0.70s', ' | inference: 4.81s | saving: 2.17s')

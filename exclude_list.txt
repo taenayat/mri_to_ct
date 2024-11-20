@@ -1,0 +1,11 @@
+condaenv38/
+conda4ganslate/
+data/
+brain/
+other_data/
+__pycache__/
+mri_to_ct/__pycache__/
+mri_to_ct/*/*/images/
+mri_to_ct/*/checkpoints/
+mri_to_ct/*/output/
+mri_to_ct/*/infer/

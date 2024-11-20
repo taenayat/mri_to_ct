@@ -1,0 +1,13 @@
+/mnt/homeGPU/tenayat/condaenv38/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:513: FutureWarning: In the future `np.object` will be defined as the corresponding NumPy scalar.
+  np.object,
+/mnt/homeGPU/tenayat/condaenv38/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:513: FutureWarning: In the future `np.object` will be defined as the corresponding NumPy scalar.
+  np.object,
+ENTERED THE FILE!
+LOADED THE LIBRARYIES
+DEVICE: cuda
+Traceback (most recent call last):
+  File "neckmask.py", line 37, in <module>
+    iterable_dir_list = sorted(os.listdir(DATA_PARENT_DIR), key=lambda x: -x)
+  File "neckmask.py", line 37, in <lambda>
+    iterable_dir_list = sorted(os.listdir(DATA_PARENT_DIR), key=lambda x: -x)
+TypeError: bad operand type for unary -: 'str'

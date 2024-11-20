@@ -1,0 +1,217 @@
+Using ./mri_to_ct/experiments/cyclegan.yaml experiment
+2024-11-15 12:08:37.904 | WARNING  | ganslate.utils.environment:setup_threading:90 - 
+    Max threads for SimpleITK and Opencv set to 1
+    For numpy etc. set OMP_NUM_THREADS=1 as an env var while running the training script,
+    e.g., OMP_NUM_THREADS=1 python tools/train.py ...
+    
+2024-11-15 12:08:38.098 | INFO     | ganslate.configs.utils:init_config:29 - Project directory ./mri_to_ct/ added to the path as `project` to allow imports of modules from it.
+/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/memcnn/models/revop.py:24: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is deprecated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
+  @custom_fwd(cast_inputs=torch.float32)
+/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/memcnn/models/revop.py:74: FutureWarning: `torch.cuda.amp.custom_bwd(args...)` is deprecated. Please use `torch.amp.custom_bwd(args..., device_type='cuda')` instead.
+  def backward(ctx, *grad_outputs):  # pragma: no cover
+[[32m2024-11-15 12:08:38[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mConfiguration:
+project: ./mri_to_ct/
+mode: train
+train:
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_unpaired
+  batch_size: 2
+  cuda: true
+  mixed_precision: false
+  opt_level: O1
+  logging:
+    freq: 10
+    multi_modality_split: null
+    tensorboard: false
+    wandb: null
+    image_window: null
+  dataset:
+    _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
+    root: /mnt/homeGPU/tenayat/data/TRAIN
+    num_workers: 0
+    pin_memory: true
+    patch_size:
+    - 32
+    - 160
+    - 160
+    focal_region_proportion: 0.0
+    augmentation: false
+    unpaired: true
+  checkpointing:
+    load_iter: null
+    freq: 100
+    start_after: 0
+    load_optimizers: true
+  n_iters: 200
+  n_iters_decay: 50
+  gan:
+    _target_: ganslate.nn.gans.unpaired.CycleGAN
+    norm_type: instance
+    weight_init_type: normal
+    weight_init_gain: 0.02
+    optimizer:
+      adversarial_loss_type: lsgan
+      beta1: 0.5
+      beta2: 0.999
+      lr_D: 0.0002
+      lr_G: 0.0004
+      lambda_AB: 5.0
+      lambda_BA: 5.0
+      lambda_identity: 0.0
+      proportion_ssim: 0.0
+    generator:
+      _target_: ganslate.nn.generators.Vnet3D
+      in_out_channels:
+        AB:
+        - 1
+        - 1
+        BA: ${train.gan.generator.in_out_channels.AB}
+      use_memory_saving: false
+      use_inverse: false
+      first_layer_channels: 16
+      down_blocks:
+      - 2
+      - 2
+      - 3
+      up_blocks:
+      - 3
+      - 3
+      - 3
+      is_separable: false
+    discriminator:
+      _target_: ganslate.nn.discriminators.PatchGAN3D
+      in_channels:
+        B: 1
+        A: ${train.gan.discriminator.in_channels.B}
+      ndf: 64
+      n_layers: 2
+      kernel_size:
+      - 4
+      - 4
+      - 4
+    pool_size: 50
+  seed: null
+  metrics:
+    discriminator_evolution: true
+    ssim: false
+val:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/VAL
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  freq: 1000
+  start_after: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    cycle_metrics: false
+    save_to_csv: true
+test:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  checkpointing:
+    load_iter: 13000
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    compute_over_input: false
+    save_to_csv: true
+infer:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.infer_dataset.SynthRAD2023InferDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  is_deployment: false
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  checkpointing:
+    load_iter: 13000
+[0m
+[[32m2024-11-15 12:08:38[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mSaving checkpoints, logs and config to: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_unpaired[0m
+[[32m2024-11-15 12:08:38[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mPython version: 3.9.20 (main, Oct  3 2024, 07:27:41) 
+[GCC 11.2.0][0m
+[[32m2024-11-15 12:08:38[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mPyTorch version: 2.5.1+cu124[0m
+[[32m2024-11-15 12:08:38[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mCUDA 12.4 - cuDNN 90100[0m
+[[32m2024-11-15 12:08:38[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mGlobal rank: 0[0m
+[[32m2024-11-15 12:08:38[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mLocal rank: 0[0m
+[[32m2024-11-15 12:08:39[0m][[36mganslate.nn.generators.vnet.vnet3d[0m][[1mINFO[0m] - [1mInvertible layers are disabled.[0m
+[[32m2024-11-15 12:08:39[0m][[36mganslate.nn.generators.vnet.vnet3d[0m][[1mINFO[0m] - [1mInvertible layers are disabled.[0m
+Traceback (most recent call last):
+  File "/mnt/homeGPU/tenayat/conda4ganslate/bin/ganslate", line 8, in <module>
+    sys.exit(interface())
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/click/core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/click/core.py", line 1078, in main
+    rv = self.invoke(ctx)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/click/core.py", line 1688, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/click/core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/click/core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/ganslate/utils/cli/interface.py", line 25, in train
+    init_engine('train', omegaconf_args).run()
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/ganslate/engines/utils.py", line 22, in init_engine
+    return ENGINES[mode](conf)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/ganslate/engines/trainer.py", line 31, in __init__
+    self.validator = self._init_validator()
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/ganslate/engines/trainer.py", line 109, in _init_validator
+    return Validator(self.conf, self.model)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/ganslate/engines/validator_tester.py", line 120, in __init__
+    super().__init__(conf)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/ganslate/engines/validator_tester.py", line 13, in __init__
+    self.data_loaders = build_loader(self.conf)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/ganslate/utils/builders.py", line 53, in build_loader
+    dataset = dataset_class(conf)
+  File "/mnt/homeGPU/tenayat/mri_to_ct/datasets/val_test_dataset.py", line 34, in __init__
+    self.mask_path = make_dataset_of_files(mask_path, EXTENSIONS)
+  File "/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/ganslate/utils/io.py", line 13, in make_dataset_of_files
+    assert root.is_dir(), f"{root} is not a valid directory"
+AssertionError: /mnt/homeGPU/tenayat/data/VAL/MASKS_PROCESSED is not a valid directory

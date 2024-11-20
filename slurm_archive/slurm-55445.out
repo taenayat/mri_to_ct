@@ -1,0 +1,632 @@
+Using ./mri_to_ct/experiments/cyclegan.yaml experiment
+2024-11-15 16:35:22.999 | WARNING  | ganslate.utils.environment:setup_threading:90 - 
+    Max threads for SimpleITK and Opencv set to 1
+    For numpy etc. set OMP_NUM_THREADS=1 as an env var while running the training script,
+    e.g., OMP_NUM_THREADS=1 python tools/train.py ...
+    
+2024-11-15 16:35:23.030 | INFO     | ganslate.configs.utils:init_config:29 - Project directory ./mri_to_ct/ added to the path as `project` to allow imports of modules from it.
+/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/memcnn/models/revop.py:24: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is deprecated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
+  @custom_fwd(cast_inputs=torch.float32)
+/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/memcnn/models/revop.py:74: FutureWarning: `torch.cuda.amp.custom_bwd(args...)` is deprecated. Please use `torch.amp.custom_bwd(args..., device_type='cuda')` instead.
+  def backward(ctx, *grad_outputs):  # pragma: no cover
+[[32m2024-11-15 16:35:23[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mConfiguration:
+project: ./mri_to_ct/
+mode: train
+train:
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp
+  batch_size: 1
+  cuda: true
+  mixed_precision: false
+  opt_level: O1
+  logging:
+    freq: 10
+    multi_modality_split: null
+    tensorboard: true
+    wandb: null
+    image_window: null
+  dataset:
+    _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
+    root: /mnt/homeGPU/tenayat/data/TRAIN
+    num_workers: 0
+    pin_memory: true
+    patch_size:
+    - 32
+    - 160
+    - 160
+    focal_region_proportion: 0.0
+    augmentation: false
+    unpaired: true
+  checkpointing:
+    load_iter: null
+    freq: 10
+    start_after: 0
+    load_optimizers: true
+  n_iters: 10
+  n_iters_decay: 0
+  gan:
+    _target_: ganslate.nn.gans.unpaired.CycleGAN
+    norm_type: instance
+    weight_init_type: normal
+    weight_init_gain: 0.02
+    optimizer:
+      adversarial_loss_type: lsgan
+      beta1: 0.5
+      beta2: 0.999
+      lr_D: 0.0002
+      lr_G: 0.0004
+      lambda_AB: 5.0
+      lambda_BA: 5.0
+      lambda_identity: 0.0
+      proportion_ssim: 0.0
+    generator:
+      _target_: ganslate.nn.generators.Vnet3D
+      in_out_channels:
+        AB:
+        - 1
+        - 1
+        BA: ${train.gan.generator.in_out_channels.AB}
+      use_memory_saving: false
+      use_inverse: false
+      first_layer_channels: 16
+      down_blocks:
+      - 2
+      - 2
+      - 3
+      up_blocks:
+      - 3
+      - 3
+      - 3
+      is_separable: false
+    discriminator:
+      _target_: ganslate.nn.discriminators.PatchGAN3D
+      in_channels:
+        B: 1
+        A: ${train.gan.discriminator.in_channels.B}
+      ndf: 64
+      n_layers: 2
+      kernel_size:
+      - 4
+      - 4
+      - 4
+    pool_size: 50
+  seed: null
+  metrics:
+    discriminator_evolution: true
+    ssim: false
+val:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/VAL
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  freq: ${train.checkpointing.freq}
+  start_after: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    cycle_metrics: true
+    save_to_csv: true
+test:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  checkpointing:
+    load_iter: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    compute_over_input: false
+    save_to_csv: true
+infer:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.infer_dataset.SynthRAD2023InferDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  is_deployment: false
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  checkpointing:
+    load_iter: 0
+[0m
+[[32m2024-11-15 16:35:23[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mSaving checkpoints, logs and config to: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp[0m
+[[32m2024-11-15 16:35:23[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mPython version: 3.9.20 (main, Oct  3 2024, 07:27:41) 
+[GCC 11.2.0][0m
+[[32m2024-11-15 16:35:23[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mPyTorch version: 2.5.1+cu124[0m
+[[32m2024-11-15 16:35:23[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mCUDA 12.4 - cuDNN 90100[0m
+[[32m2024-11-15 16:35:23[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mGlobal rank: 0[0m
+[[32m2024-11-15 16:35:23[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mLocal rank: 0[0m
+[[32m2024-11-15 16:35:23[0m][[36mganslate.nn.generators.vnet.vnet3d[0m][[1mINFO[0m] - [1mInvertible layers are disabled.[0m
+[[32m2024-11-15 16:35:23[0m][[36mganslate.nn.generators.vnet.vnet3d[0m][[1mINFO[0m] - [1mInvertible layers are disabled.[0m
+[[32m2024-11-15 16:35:24[0m][[36mganslate.engines.trainer[0m][[1mINFO[0m] - [1mTraining started.[0m
+[[32m2024-11-15 16:36:05[0m][[36mganslate.utils.trackers.training[0m][[1mINFO[0m] - [1m
+-------------------- (iter: 10 | comp: 1.491, data: 1.419 | lr_G: 0.0004000, lr_D: 0.0002000) --------------------
+G_AB: 2.143 D_B: 1.407 cycle_A: 1.170 G_BA: 1.516 D_A: 2.749 cycle_B: 2.658 [0m
+[[32m2024-11-15 16:36:08[0m][[36mganslate.engines.trainer[0m][[1mINFO[0m] - [1mSaving the model after 10 iterations.[0m
+[[32m2024-11-15 16:36:11[0m][[36mganslate.engines.validator_tester[0m][[1mINFO[0m] - [1mValidation started.[0m
+[[32m2024-11-15 16:39:07[0m][[36mganslate.utils.trackers.validation_testing[0m][[1mINFO[0m] - [1m
+-------------------- (Val at iter 10) --------------------
+ssim: -0.048 mse: 0.739 nmse: 1.048 psnr: 1.325 mae: 0.791 ssim_clean_mask: 0.487 mse_clean_mask: 0.383 nmse_clean_mask: 0.993 psnr_clean_mask: 7.784 mae_clean_mask: 0.527 cycle_SSIM: -0.014 [0m
+WARNING:root:Verbose level set to 30
+[ssim               -0.048360
+mse                 0.738553
+nmse                1.048117
+psnr                1.325137
+mae                 0.791423
+ssim_clean_mask     0.487170
+mse_clean_mask      0.383117
+nmse_clean_mask     0.992603
+psnr_clean_mask     7.784200
+mae_clean_mask      0.526840
+cycle_SSIM         -0.013741
+iter               10.000000
+dtype: float64]
+BEST ITERATION 10.0 FOR METRIC mae_clean_mask
+2024-11-15 16:39:18.867 | WARNING  | ganslate.utils.environment:setup_threading:90 - 
+    Max threads for SimpleITK and Opencv set to 1
+    For numpy etc. set OMP_NUM_THREADS=1 as an env var while running the training script,
+    e.g., OMP_NUM_THREADS=1 python tools/train.py ...
+    
+2024-11-15 16:39:18.886 | INFO     | ganslate.configs.utils:init_config:29 - Project directory ./mri_to_ct/ added to the path as `project` to allow imports of modules from it.
+/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/memcnn/models/revop.py:24: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is deprecated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
+  @custom_fwd(cast_inputs=torch.float32)
+/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/memcnn/models/revop.py:74: FutureWarning: `torch.cuda.amp.custom_bwd(args...)` is deprecated. Please use `torch.amp.custom_bwd(args..., device_type='cuda')` instead.
+  def backward(ctx, *grad_outputs):  # pragma: no cover
+[[32m2024-11-15 16:39:19[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mConfiguration:
+project: ./mri_to_ct/
+mode: test
+train:
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp
+  batch_size: 1
+  cuda: true
+  mixed_precision: false
+  opt_level: O1
+  logging:
+    freq: 10
+    multi_modality_split: null
+    tensorboard: true
+    wandb: null
+    image_window: null
+  dataset:
+    _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
+    root: /mnt/homeGPU/tenayat/data/TRAIN
+    num_workers: 0
+    pin_memory: true
+    patch_size:
+    - 32
+    - 160
+    - 160
+    focal_region_proportion: 0.0
+    augmentation: false
+    unpaired: true
+  checkpointing:
+    load_iter: null
+    freq: 10
+    start_after: 0
+    load_optimizers: true
+  n_iters: 10
+  n_iters_decay: 0
+  gan:
+    _target_: ganslate.nn.gans.unpaired.CycleGAN
+    norm_type: instance
+    weight_init_type: normal
+    weight_init_gain: 0.02
+    optimizer:
+      adversarial_loss_type: lsgan
+      beta1: 0.5
+      beta2: 0.999
+      lr_D: 0.0002
+      lr_G: 0.0004
+      lambda_AB: 5.0
+      lambda_BA: 5.0
+      lambda_identity: 0.0
+      proportion_ssim: 0.0
+    generator:
+      _target_: ganslate.nn.generators.Vnet3D
+      in_out_channels:
+        AB:
+        - 1
+        - 1
+        BA: ${train.gan.generator.in_out_channels.AB}
+      use_memory_saving: false
+      use_inverse: false
+      first_layer_channels: 16
+      down_blocks:
+      - 2
+      - 2
+      - 3
+      up_blocks:
+      - 3
+      - 3
+      - 3
+      is_separable: false
+    discriminator:
+      _target_: ganslate.nn.discriminators.PatchGAN3D
+      in_channels:
+        B: 1
+        A: ${train.gan.discriminator.in_channels.B}
+      ndf: 64
+      n_layers: 2
+      kernel_size:
+      - 4
+      - 4
+      - 4
+    pool_size: 50
+  seed: null
+  metrics:
+    discriminator_evolution: true
+    ssim: false
+val:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/VAL
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  freq: ${train.checkpointing.freq}
+  start_after: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    cycle_metrics: true
+    save_to_csv: true
+test:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  checkpointing:
+    load_iter: 10
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    compute_over_input: false
+    save_to_csv: true
+infer:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.infer_dataset.SynthRAD2023InferDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  is_deployment: false
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  checkpointing:
+    load_iter: 10
+[0m
+[[32m2024-11-15 16:39:19[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mSaving checkpoints, logs and config to: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp[0m
+[[32m2024-11-15 16:39:19[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mPython version: 3.9.20 (main, Oct  3 2024, 07:27:41) 
+[GCC 11.2.0][0m
+[[32m2024-11-15 16:39:19[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mPyTorch version: 2.5.1+cu124[0m
+[[32m2024-11-15 16:39:19[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mCUDA 12.4 - cuDNN 90100[0m
+[[32m2024-11-15 16:39:19[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mGlobal rank: 0[0m
+[[32m2024-11-15 16:39:19[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mLocal rank: 0[0m
+[[32m2024-11-15 16:39:19[0m][[36mganslate.nn.generators.vnet.vnet3d[0m][[1mINFO[0m] - [1mInvertible layers are disabled.[0m
+/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/ganslate/nn/gans/base.py:259: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  checkpoint = torch.load(checkpoint_path, map_location=self.device)
+[[32m2024-11-15 16:39:23[0m][[36mganslate.nn.gans.base[0m][[1mINFO[0m] - [1mLoaded the checkpoint from `/mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp/checkpoints/10.pth`[0m
+[[32m2024-11-15 16:39:23[0m][[36mganslate.engines.validator_tester[0m][[1mINFO[0m] - [1mTesting started.[0m
+[[32m2024-11-15 16:44:50[0m][[36mganslate.utils.trackers.validation_testing[0m][[1mINFO[0m] - [1m
+-------------------- (Test) --------------------
+ssim: -0.048 mse: 0.737 nmse: 1.048 psnr: 1.329 mae: 0.792 ssim_clean_mask: 0.487 mse_clean_mask: 0.384 nmse_clean_mask: 0.998 psnr_clean_mask: 7.663 mae_clean_mask: 0.530 [0m
+2024-11-15 16:45:02.262 | WARNING  | ganslate.utils.environment:setup_threading:90 - 
+    Max threads for SimpleITK and Opencv set to 1
+    For numpy etc. set OMP_NUM_THREADS=1 as an env var while running the training script,
+    e.g., OMP_NUM_THREADS=1 python tools/train.py ...
+    
+2024-11-15 16:45:02.281 | INFO     | ganslate.configs.utils:init_config:29 - Project directory ./mri_to_ct/ added to the path as `project` to allow imports of modules from it.
+/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/memcnn/models/revop.py:24: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is deprecated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
+  @custom_fwd(cast_inputs=torch.float32)
+/mnt/homeGPU/tenayat/conda4ganslate/lib/python3.9/site-packages/memcnn/models/revop.py:74: FutureWarning: `torch.cuda.amp.custom_bwd(args...)` is deprecated. Please use `torch.amp.custom_bwd(args..., device_type='cuda')` instead.
+  def backward(ctx, *grad_outputs):  # pragma: no cover
+[[32m2024-11-15 16:45:02[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mConfiguration:
+project: ./mri_to_ct/
+mode: infer
+train:
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp
+  batch_size: 1
+  cuda: true
+  mixed_precision: false
+  opt_level: O1
+  logging:
+    freq: 10
+    multi_modality_split: null
+    tensorboard: true
+    wandb: null
+    image_window: null
+  dataset:
+    _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
+    root: /mnt/homeGPU/tenayat/data/TRAIN
+    num_workers: 0
+    pin_memory: true
+    patch_size:
+    - 32
+    - 160
+    - 160
+    focal_region_proportion: 0.0
+    augmentation: false
+    unpaired: true
+  checkpointing:
+    load_iter: null
+    freq: 10
+    start_after: 0
+    load_optimizers: true
+  n_iters: 10
+  n_iters_decay: 0
+  gan:
+    _target_: ganslate.nn.gans.unpaired.CycleGAN
+    norm_type: instance
+    weight_init_type: normal
+    weight_init_gain: 0.02
+    optimizer:
+      adversarial_loss_type: lsgan
+      beta1: 0.5
+      beta2: 0.999
+      lr_D: 0.0002
+      lr_G: 0.0004
+      lambda_AB: 5.0
+      lambda_BA: 5.0
+      lambda_identity: 0.0
+      proportion_ssim: 0.0
+    generator:
+      _target_: ganslate.nn.generators.Vnet3D
+      in_out_channels:
+        AB:
+        - 1
+        - 1
+        BA: ${train.gan.generator.in_out_channels.AB}
+      use_memory_saving: false
+      use_inverse: false
+      first_layer_channels: 16
+      down_blocks:
+      - 2
+      - 2
+      - 3
+      up_blocks:
+      - 3
+      - 3
+      - 3
+      is_separable: false
+    discriminator:
+      _target_: ganslate.nn.discriminators.PatchGAN3D
+      in_channels:
+        B: 1
+        A: ${train.gan.discriminator.in_channels.B}
+      ndf: 64
+      n_layers: 2
+      kernel_size:
+      - 4
+      - 4
+      - 4
+    pool_size: 50
+  seed: null
+  metrics:
+    discriminator_evolution: true
+    ssim: false
+val:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/VAL
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  freq: ${train.checkpointing.freq}
+  start_after: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    cycle_metrics: true
+    save_to_csv: true
+test:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  checkpointing:
+    load_iter: 10
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    compute_over_input: false
+    save_to_csv: true
+infer:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.infer_dataset.SynthRAD2023InferDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  is_deployment: false
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  checkpointing:
+    load_iter: 10
+[0m
+[[32m2024-11-15 16:45:02[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mSaving checkpoints, logs and config to: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp[0m
+[[32m2024-11-15 16:45:02[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mPython version: 3.9.20 (main, Oct  3 2024, 07:27:41) 
+[GCC 11.2.0][0m
+[[32m2024-11-15 16:45:02[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mPyTorch version: 2.5.1+cu124[0m
+[[32m2024-11-15 16:45:02[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mCUDA 12.4 - cuDNN 90100[0m
+[[32m2024-11-15 16:45:02[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mGlobal rank: 0[0m
+[[32m2024-11-15 16:45:02[0m][[36mganslate.utils.environment[0m][[1mINFO[0m] - [1mLocal rank: 0[0m
+[[32m2024-11-15 16:45:02[0m][[36mganslate.nn.generators.vnet.vnet3d[0m][[1mINFO[0m] - [1mInvertible layers are disabled.[0m
+[[32m2024-11-15 16:45:03[0m][[36mganslate.nn.gans.base[0m][[1mINFO[0m] - [1mLoaded the checkpoint from `/mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp/checkpoints/10.pth`[0m
+[[32m2024-11-15 16:45:03[0m][[36mganslate.engines.inferer[0m][[1mINFO[0m] - [1mInference started.[0m
+[[32m2024-11-15 16:45:09[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('1/45 - loading: 0.31s', ' | inference: 4.17s | saving: 1.81s')[0m
+[[32m2024-11-15 16:45:25[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('2/45 - loading: 0.73s', ' | inference: 5.43s | saving: 2.21s')[0m
+[[32m2024-11-15 16:45:42[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('3/45 - loading: 0.61s', ' | inference: 5.35s | saving: 2.26s')[0m
+[[32m2024-11-15 16:45:59[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('4/45 - loading: 0.68s', ' | inference: 5.87s | saving: 2.37s')[0m
+[[32m2024-11-15 16:46:16[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('5/45 - loading: 0.75s', ' | inference: 5.76s | saving: 2.37s')[0m
+[[32m2024-11-15 16:46:34[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('6/45 - loading: 0.65s', ' | inference: 5.62s | saving: 2.15s')[0m
+[[32m2024-11-15 16:46:51[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('7/45 - loading: 0.74s', ' | inference: 5.76s | saving: 2.22s')[0m
+[[32m2024-11-15 16:47:08[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('8/45 - loading: 0.63s', ' | inference: 5.59s | saving: 2.08s')[0m
+[[32m2024-11-15 16:47:24[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('9/45 - loading: 0.58s', ' | inference: 5.71s | saving: 1.99s')[0m
+[[32m2024-11-15 16:47:40[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('10/45 - loading: 0.61s', ' | inference: 5.31s | saving: 2.03s')[0m
+[[32m2024-11-15 16:47:56[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('11/45 - loading: 0.55s', ' | inference: 5.52s | saving: 1.76s')[0m
+[[32m2024-11-15 16:48:11[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('12/45 - loading: 0.59s', ' | inference: 5.72s | saving: 1.87s')[0m
+[[32m2024-11-15 16:48:27[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('13/45 - loading: 0.69s', ' | inference: 5.69s | saving: 2.10s')[0m
+[[32m2024-11-15 16:48:44[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('14/45 - loading: 0.56s', ' | inference: 5.54s | saving: 1.85s')[0m
+[[32m2024-11-15 16:49:00[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('15/45 - loading: 0.60s', ' | inference: 5.79s | saving: 1.98s')[0m
+[[32m2024-11-15 16:49:15[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('16/45 - loading: 0.59s', ' | inference: 5.25s | saving: 1.97s')[0m
+[[32m2024-11-15 16:49:30[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('17/45 - loading: 0.56s', ' | inference: 4.88s | saving: 1.63s')[0m
+[[32m2024-11-15 16:49:45[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('18/45 - loading: 0.60s', ' | inference: 5.13s | saving: 1.77s')[0m
+[[32m2024-11-15 16:50:00[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('19/45 - loading: 0.56s', ' | inference: 5.49s | saving: 1.81s')[0m
+[[32m2024-11-15 16:50:15[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('20/45 - loading: 0.47s', ' | inference: 5.08s | saving: 1.43s')[0m
+[[32m2024-11-15 16:50:29[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('21/45 - loading: 0.60s', ' | inference: 5.01s | saving: 1.83s')[0m
+[[32m2024-11-15 16:50:45[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('22/45 - loading: 0.62s', ' | inference: 5.86s | saving: 1.97s')[0m
+[[32m2024-11-15 16:51:02[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('23/45 - loading: 0.60s', ' | inference: 5.95s | saving: 1.99s')[0m
+[[32m2024-11-15 16:51:19[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('24/45 - loading: 0.60s', ' | inference: 5.78s | saving: 2.01s')[0m
+[[32m2024-11-15 16:51:36[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('25/45 - loading: 0.59s', ' | inference: 5.25s | saving: 1.85s')[0m
+[[32m2024-11-15 16:51:50[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('26/45 - loading: 0.58s', ' | inference: 5.01s | saving: 1.73s')[0m
+[[32m2024-11-15 16:52:05[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('27/45 - loading: 0.46s', ' | inference: 5.05s | saving: 1.67s')[0m
+[[32m2024-11-15 16:52:20[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('28/45 - loading: 0.63s', ' | inference: 5.54s | saving: 2.13s')[0m
+[[32m2024-11-15 16:52:39[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('29/45 - loading: 0.62s', ' | inference: 6.38s | saving: 2.13s')[0m
+[[32m2024-11-15 16:52:56[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('30/45 - loading: 0.56s', ' | inference: 5.87s | saving: 1.85s')[0m
+[[32m2024-11-15 16:53:12[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('31/45 - loading: 0.65s', ' | inference: 5.65s | saving: 1.92s')[0m
+[[32m2024-11-15 16:53:29[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('32/45 - loading: 0.69s', ' | inference: 5.43s | saving: 2.12s')[0m
+[[32m2024-11-15 16:53:45[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('33/45 - loading: 0.64s', ' | inference: 4.91s | saving: 2.00s')[0m
+[[32m2024-11-15 16:54:00[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('34/45 - loading: 0.59s', ' | inference: 4.93s | saving: 1.89s')[0m
+[[32m2024-11-15 16:54:16[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('35/45 - loading: 0.61s', ' | inference: 5.18s | saving: 2.10s')[0m
+[[32m2024-11-15 16:54:32[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('36/45 - loading: 0.63s', ' | inference: 5.03s | saving: 1.98s')[0m
+[[32m2024-11-15 16:54:49[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('37/45 - loading: 0.67s', ' | inference: 5.47s | saving: 2.27s')[0m
+[[32m2024-11-15 16:55:06[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('38/45 - loading: 0.63s', ' | inference: 5.66s | saving: 1.92s')[0m
+[[32m2024-11-15 16:55:26[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('39/45 - loading: 0.80s', ' | inference: 7.71s | saving: 2.69s')[0m
+[[32m2024-11-15 16:55:45[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('40/45 - loading: 0.69s', ' | inference: 5.94s | saving: 2.20s')[0m
+[[32m2024-11-15 16:56:04[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('41/45 - loading: 0.85s', ' | inference: 5.84s | saving: 2.88s')[0m
+[[32m2024-11-15 16:56:22[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('42/45 - loading: 0.63s', ' | inference: 5.19s | saving: 2.03s')[0m
+[[32m2024-11-15 16:56:38[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('43/45 - loading: 0.62s', ' | inference: 4.89s | saving: 2.00s')[0m
+[[32m2024-11-15 16:56:53[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('44/45 - loading: 0.58s', ' | inference: 4.67s | saving: 2.05s')[0m
+[[32m2024-11-15 16:57:10[0m][[36mganslate.utils.trackers.inference[0m][[1mINFO[0m] - [1m('45/45 - loading: 0.73s', ' | inference: 5.45s | saving: 2.32s')[0m
+
+\FINISHED
+

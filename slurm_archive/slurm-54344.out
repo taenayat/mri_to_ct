@@ -1,0 +1,5 @@
+ENTERED THE FILE!
+Traceback (most recent call last):
+  File "neckmask.py", line 16, in <module>
+    logger.info('Started!')
+AttributeError: 'StreamHandler' object has no attribute 'info'

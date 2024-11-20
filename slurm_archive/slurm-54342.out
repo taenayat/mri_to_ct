@@ -1,0 +1,19 @@
+/mnt/homeGPU/tenayat/condaenv38/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:513: FutureWarning: In the future `np.object` will be defined as the corresponding NumPy scalar.
+  np.object,
+/mnt/homeGPU/tenayat/condaenv38/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:513: FutureWarning: In the future `np.object` will be defined as the corresponding NumPy scalar.
+  np.object,
+ENTERED THE FILE!
+LOADED THE LIBRARYIES
+DEVICE: cuda
+MODEL LOADED SUCCESSFULLY
+1BA001
+Traceback (most recent call last):
+  File "neckmask.py", line 118, in <module>
+    output = sliding_window_inference(input, (64, 64, 64), 1, model, overlap=0.8)
+  File "/mnt/homeGPU/tenayat/condaenv38/lib/python3.8/site-packages/monai/inferers/utils.py", line 161, in sliding_window_inference
+    roi_size = fall_back_tuple(roi_size, image_size_)
+  File "/mnt/homeGPU/tenayat/condaenv38/lib/python3.8/site-packages/monai/utils/misc.py", line 277, in fall_back_tuple
+    user = ensure_tuple_rep(user_provided, ndim)
+  File "/mnt/homeGPU/tenayat/condaenv38/lib/python3.8/site-packages/monai/utils/misc.py", line 203, in ensure_tuple_rep
+    raise ValueError(f"Sequence must have length {dim}, got {len(tup)}.")
+ValueError: Sequence must have length 4, got 3.

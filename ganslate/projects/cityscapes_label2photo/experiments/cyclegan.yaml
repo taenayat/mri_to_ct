@@ -1,0 +1,67 @@
+project: "/home/chinmay/git/ganslate/projects/horse2zebra"
+
+train:
+    output_dir: "/home/chinmay/git/ganslate/checkpoints/label2photo_cyclegan/"
+    cuda: True
+    n_iters: 297500      # 2975 x 100 
+    n_iters_decay: 297500
+    batch_size: 1
+    mixed_precision: False
+
+    logging:
+        freq: 100
+        wandb:
+            project: "cityscapes_label2photo"
+            run: "cyclegan_trial"
+        
+    checkpointing:
+        freq: 10000
+
+    dataset: 
+        _target_: ganslate.data.UnpairedImageDataset
+        root: "/home/chinmay/Datasets/Cityscapes_label2photo/train"
+        num_workers: 8
+        image_channels: 3
+        preprocess: ['resize', 'random_crop', 'random_flip']
+        load_size: [286, 572]
+        final_size: [256, 512]
+
+    gan:  
+        _target_: ganslate.nn.gans.unpaired.CycleGAN
+        generator:  
+            _target_: ganslate.nn.generators.Resnet2D
+            n_residual_blocks: 9
+            in_out_channels: 
+                AB: [3, 3]          
+
+        discriminator:  
+            _target_: ganslate.nn.discriminators.PatchGAN2D
+            n_layers: 3
+            in_channels: 
+                B: 3
+
+        optimizer:
+            lr_D: 0.0002
+            lr_G: 0.0002
+            lambda_AB: 10.0
+            lambda_BA: 10.0
+            lambda_identity: 0
+            proportion_ssim: 0
+    
+    metrics:
+        discriminator_evolution: True
+        ssim: True
+
+
+val:
+    freq: 200
+    dataset: 
+        _target_: ganslate.data.PairedImageDataset  # Paired dataset for validation
+        root: "/home/chinmay/Datasets/Cityscapes_label2photo/val"
+        num_workers: 8
+        image_channels: 3
+        preprocess: ['resize']
+        load_size: [286, 572]
+        final_size: [256, 512]
+    metrics:
+        cycle_metrics: False

@@ -1,0 +1,65 @@
+project: "/home/chinmay/git/ganslate/projects/horse2zebra"
+
+train:
+    output_dir: "/home/chinmay/git/ganslate/checkpoints/label2photo_pix2pix/"
+    cuda: True
+    n_iters: 297500      # 2975 (images) x 100 ("epochs")
+    n_iters_decay: 5000
+    batch_size: 1
+    mixed_precision: False
+
+    logging:
+        freq: 100
+        wandb:
+            project: "cityscapes_label2photo"
+            run: "pix2pix_trial"
+        
+    checkpointing:
+        freq: 5000
+
+    dataset: 
+        _target_: ganslate.data.PairedImageDataset
+        root: "/home/chinmay/Datasets/Cityscapes_label2photo/train"
+        num_workers: 8
+        image_channels: 3
+        preprocess: ['resize', 'random_crop', 'random_flip']
+        load_size: [286, 572]
+        final_size: [256, 512]  
+
+    gan: 
+        _target_: ganslate.nn.gans.paired.Pix2PixConditionalGAN
+        generator:  
+            _target_: ganslate.nn.generators.Unet2D
+            in_out_channels: 
+                AB: [3, 3]
+            num_downs: 7
+            ngf: 128
+            use_dropout: True
+
+        discriminator:  
+            _target_: ganslate.nn.discriminators.PatchGAN2D
+            n_layers: 4
+            in_channels: 
+                B: 6
+
+        optimizer:
+            lr_D: 0.0001
+            lr_G: 0.0002
+            lambda_pix2pix: 30.0
+    
+    metrics:
+        discriminator_evolution: True
+
+
+val:
+    freq: 5000
+    dataset: 
+        _target_: ganslate.data.PairedImageDataset
+        root: "/home/chinmay/Datasets/Cityscapes_label2photo/val"
+        num_workers: 8
+        image_channels: 3
+        preprocess: ['resize']
+        load_size: [286, 572]
+        final_size: [256, 512]     
+    metrics:
+        cycle_metrics: False

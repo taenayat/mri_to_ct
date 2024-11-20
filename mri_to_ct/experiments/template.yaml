@@ -1,0 +1,87 @@
+project: "./mri_to_ct/"
+train:
+    output_dir: "/mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp"
+    cuda: True
+    n_iters:  20000
+    n_iters_decay: 5000
+    batch_size:  1
+    mixed_precision: False
+
+    logging:
+        freq: 10
+        tensorboard: True
+    
+    checkpointing:
+        freq: 1000
+
+    dataset: 
+        _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
+        root: "/mnt/homeGPU/tenayat/data/TRAIN"
+        num_workers: 0
+        patch_size: [32, 160, 160]
+        pin_memory: True
+        augmentation: False
+        unpaired: True
+        
+    gan: 
+        _target_: ganslate.nn.gans.unpaired.CycleGAN
+        generator:  
+            _target_: ganslate.nn.generators.Vnet3D
+            use_memory_saving: False
+            use_inverse: False
+            in_out_channels:
+                AB: [1, 1]
+            down_blocks: [2, 2, 3]
+            up_blocks: [3, 3, 3]
+
+        discriminator:  
+            _target_: ganslate.nn.discriminators.PatchGAN3D
+            n_layers: 2
+            in_channels: 
+                B: 1
+
+        optimizer:
+            lr_D: 0.0002
+            lr_G: 0.0004
+            lambda_AB: 5.0
+            lambda_BA: 5.0
+            lambda_identity: 0
+            proportion_ssim: 0
+    
+    metrics:
+        discriminator_evolution: True
+
+
+val:
+    freq: ${train.checkpointing.freq}
+    dataset: 
+        _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+        root: "/mnt/homeGPU/tenayat/data/VAL"
+        num_workers: 0
+        pin_memory: True
+    sliding_window:
+        window_size: ${train.dataset.patch_size}
+    metrics:
+        cycle_metrics: True
+        save_to_csv: True
+
+test:
+    checkpointing:
+        load_iter: 0
+    dataset: 
+        _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+        root: "/mnt/homeGPU/tenayat/data/TEST"
+        num_workers: 0
+    sliding_window:
+        window_size: ${train.dataset.patch_size}
+
+
+# infer:
+#     checkpointing:
+#         load_iter: 0
+#     dataset:
+#         _target_: project.datasets.infer_dataset.SynthRAD2023InferDataset
+#         root: "/mnt/homeGPU/tenayat/data/TEST"
+#         num_workers: 0
+#     sliding_window:
+#         window_size: ${train.dataset.patch_size}
