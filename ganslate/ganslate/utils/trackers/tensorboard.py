@@ -13,8 +13,9 @@ class TensorboardTracker:
 
     def log_iter(self,
                  iter_idx,
-                 visuals,
+                #  visuals,
                  mode,
+                 visuals = None,
                  learning_rates=None,
                  losses=None,
                  metrics=None):
@@ -34,8 +35,9 @@ class TensorboardTracker:
                 self.writer.add_scalar(f"Metrics ({mode})/{name}", metric, iter_idx)
 
         # Normal images
-        normal_visuals = process_visuals_wandb_tensorboard(visuals, image_window=None)
-        self._log_images(iter_idx, normal_visuals, tag=mode)
+        if visuals is not None:
+            normal_visuals = process_visuals_wandb_tensorboard(visuals, image_window=None)
+            self._log_images(iter_idx, normal_visuals, tag=mode)
 
         # Windowed images
         if self.image_window:

@@ -80,7 +80,8 @@ class TrainingTracker(BaseTracker):
 
         if self.tensorboard:
             self.tensorboard.log_iter(iter_idx=self.iter_idx,
-                                      visuals=visuals,
+                                    #   visuals=visuals,
+                                      visuals=None,
                                       mode="train",
                                       learning_rates=learning_rates,
                                       losses=losses,
@@ -89,21 +90,51 @@ class TrainingTracker(BaseTracker):
     def save_learning_curves(self,losses):
         import pandas as pd
         
-        losses_discriminator, losses_generator = [], []
-        for d in losses:
-            losses_discriminator.append(d['D'].detach().cpu().item())
-            losses_generator.append(d['G'].detach().cpu().item())
-            
-        plt.figure(figsize=(10, 5))
-        plt.plot(losses_discriminator, label='Discriminator', color='green', linewidth=0.5)
-        plt.plot(losses_generator, label='Generator', color='orange', linewidth=0.5)
-        
-        plt.xlabel('Epoch')
-        plt.ylabel('Loss')
-        plt.legend()
-        plt.savefig(Path(self.output_dir)/'training_curves.png')
+        # losses_discriminator, losses_generator = [], []
+        # for d in losses:
 
-        # Save to csv losses of disciminator and generator together
-        losses = {'discriminator': losses_discriminator, 'generator': losses_generator}
-        losses_df = pd.DataFrame(losses)
+        #     # if 'D_A' in d:
+        #     #     losses_discriminator.append(d['D_A'].detach().cpu().item())
+        #     # if 'D_B' in d:
+        #     #     losses_discriminator.append(d['D_B'].detach().cpu().item())
+        #     # losses_discriminator.append(d['D'].detach().cpu().item())
+        #     # losses_generator.append(d['G'].detach().cpu().item())
+
+        #     losses_discriminator.append(d['D_A'].detach().cpu().item())
+        #     losses_generator.append(d['G_AB'].detach().cpu().item())
+
+            
+        # plt.figure(figsize=(10, 5))
+        # plt.plot(losses_discriminator, label='Discriminator', color='green', linewidth=0.5)
+        # plt.plot(losses_generator, label='Generator', color='orange', linewidth=0.5)
+        
+        # plt.xlabel('Epoch')
+        # plt.ylabel('Loss')
+        # plt.legend()
+        # plt.savefig(Path(self.output_dir)/'training_curves.png')
+
+        # # Save to csv losses of disciminator and generator together
+        # losses = {'discriminator': losses_discriminator, 'generator': losses_generator}
+        # losses_df = pd.DataFrame(losses)
+        # losses_df.to_csv(Path(self.output_dir)/'training_losses.csv', index=False)
+
+
+        # losses here is a list of dictionaries
+        # now we want a dictionary of lists
+        losses_detached = {}
+        loss_names = list(losses[0].keys())
+        if 'idt_A' in loss_names:
+            loss_names.remove('idt_A')
+        if 'idt_B' in loss_names:
+            loss_names.remove('idt_B')
+
+        for loss in loss_names:
+            losses_detached[loss] = []
+
+        for d in losses:
+            for loss in loss_names:
+                losses_detached[loss].append(d[loss].detach().cpu().item())
+
+        losses_df = pd.DataFrame(losses_detached)
         losses_df.to_csv(Path(self.output_dir)/'training_losses.csv', index=False)
+

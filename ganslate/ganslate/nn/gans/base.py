@@ -256,7 +256,7 @@ class BaseGAN(ABC):
             iter_idx (int) -- current iteration; used to specify the filenames (e.g. 3000.pth)
         """
         checkpoint_path = Path(self.output_dir).resolve() / f"checkpoints/{iter_idx}.pth"
-        checkpoint = torch.load(checkpoint_path, map_location=self.device)
+        checkpoint = torch.load(checkpoint_path, map_location=self.device, weights_only=True)
         self.logger.info(f"Loaded the checkpoint from `{checkpoint_path}`")
 
         # load networks
