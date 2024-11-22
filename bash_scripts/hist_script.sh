@@ -1,7 +1,7 @@
 cd /mnt/homeGPU/tenayat
 
 # sbatch ganslate.sh mri_to_ct/experiments/cyclegan.yaml mae_clean_mask
-sbatch ganslate.sh mri_to_ct/experiments/24_11_19_baseline_400epoch.yaml
+sbatch bash_scripts/ganslate.sh mri_to_ct/experiments/24_11_19_baseline_400epoch.yaml
 
 tail -f slurm_archive/slurm-5*.out
 
@@ -14,5 +14,14 @@ echo $PWD
 ganslate infer config="$CONFIG_YAML"
 
 #run this on local to sync here with local machine
-rsync -anv --exclude-from=mri_to_ct/exclude_list.txt tenayat@ngpu.ugr.es:/mnt/homeGPU/tenayat/ mri_to_ct/
+# rsync -anv --exclude-from=mri_to_ct/exclude_list.txt tenayat@ngpu.ugr.es:/mnt/homeGPU/tenayat/ mri_to_ct/
+rsync -anv --exclude-from=mri_to_ct/exclude_list.txt --include-from=mri_to_ct/include_list.txt tenayat@ngpu.ugr.es:/mnt/homeGPU/tenayat/ mri_to_ct/
+rsync -avzP
 
+# either this or that:
+#SBATCH --partition dgx
+#SBACTH --nodelist dgx1
+
+#SBATCH --partition dios
+
+python python_scripts/delete_redundant_models.py -e 24_11_19_baseline_400epoch

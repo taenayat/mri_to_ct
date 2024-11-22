@@ -1,6 +1,5 @@
 condaenv38/
 conda4ganslate/
-data/
 brain/
 other_data/
 __pycache__/
