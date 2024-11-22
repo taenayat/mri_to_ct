@@ -4,7 +4,7 @@ models saved in each checkpoint. If there is a best model selected from python_s
 then this script finds is from the updated yaml file and keeps the best model as well as the final checkpoint.
 if the best model coinsides the last checkpoint, only one model is kept. 
 """
- 
+
 import os
 import yaml
 import argparse
