@@ -100,7 +100,8 @@ def main(parent_path, output, folds=0, leave_one_out=False): #, prep_config, __d
     df.reset_index(inplace=True, drop=True)
 
     # Split the data in train and test
-    train_data, test_data = train_test_split(mri_paths, test_size=0.25, random_state=RANDOM_STATE, shuffle=True)
+    # train_data, test_data = train_test_split(mri_paths, test_size=0.25, random_state=RANDOM_STATE, shuffle=True)
+    train_data, test_data = train_test_split(mri_paths, test_size=45, random_state=RANDOM_STATE, shuffle=True)
 
     # Exclude the test data from the mri_paths
     mri_paths = train_data
@@ -117,7 +118,8 @@ def main(parent_path, output, folds=0, leave_one_out=False): #, prep_config, __d
             train_folds.append(train_cases)
             val_folds.append(val_cases)
     else: 
-        train_folds, val_folds= train_test_split(mri_paths, test_size=0.1, random_state=RANDOM_STATE, shuffle=True)
+        # train_folds, val_folds= train_test_split(mri_paths, test_size=0.1, random_state=RANDOM_STATE, shuffle=True)
+        train_folds, val_folds= train_test_split(mri_paths, test_size=15, random_state=RANDOM_STATE, shuffle=True)
         train_folds = [train_folds]
         val_folds = [val_folds]
 

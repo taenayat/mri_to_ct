@@ -1,0 +1,52 @@
+path=conda4ganlate/lib/python3.9/site-packages/ganslate
+
+1.
+path/utils/csv_saver.py - line 8
+from: "self.df = self.df.append(row, ignore_index=True)"
+to: "self.df = pd.concat([self.df, pd.DataFrame([row], columns=row.keys())], ignore_index=True)"
+
+2.
+path/utils/trackers/trainig.py - line 89 save_learning_curves
+to:
+"
+        losses_detached = {}
+        loss_names = list(losses[0].keys())
+        if 'idt_A' in loss_names:
+            loss_names.remove('idt_A')
+        if 'idt_B' in loss_names:
+            loss_names.remove('idt_B')
+
+        for loss in loss_names:
+            losses_detached[loss] = []
+
+        for d in losses:
+            for loss in loss_names:
+                losses_detached[loss].append(d[loss].detach().cpu().item())
+
+        losses_df = pd.DataFrame(losses_detached)
+        losses_df.to_csv(Path(self.output_dir)/'training_losses.csv', index=False)
+"
+
+3.
+path/utils/trackers/training.py - line 83 (self.tensorboard.log_iter)
+from: "visuals=visuals"
+to: "visuals=None"
+
+4.
+path/utils/trackers/tensorboard.py - line 17 (def log_iter)
+from "..., visuals, mode, ..."
+to "..., mode, visuals=None, ..."
+
+5.
+path/utils/trackers/tensorboard.py - line 37 (Normal images)
+from:
+"
+        normal_visuals = process_visuals_wandb_tensorboard(visuals, image_window=None)
+        self._log_images(iter_idx, normal_visuals, tag=mode)
+"
+to:
+"
+            normal_visuals = process_visuals_wandb_tensorboard(visuals, image_window=None)
+            self._log_images(iter_idx, normal_visuals, tag=mode)
+"
+
