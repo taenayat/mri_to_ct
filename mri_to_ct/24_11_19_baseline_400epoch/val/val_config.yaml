@@ -25,7 +25,7 @@ train:
     augmentation: false
     unpaired: true
   checkpointing:
-    load_iter: null
+    load_iter: 36300
     freq: 2420
     start_after: 0
     load_optimizers: true

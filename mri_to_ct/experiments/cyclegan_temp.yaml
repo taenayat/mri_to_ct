@@ -2,17 +2,17 @@ project: "./mri_to_ct/"
 train:
     output_dir: "/mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp"
     cuda: True
-    n_iters:  20000
-    n_iters_decay: 5000
+    n_iters:  3
+    n_iters_decay: 0
     batch_size:  1
     mixed_precision: False
 
     logging:
-        freq: 10
+        freq: 1
         tensorboard: True
     
     checkpointing:
-        freq: 1000
+        freq: 3
         # load_optimizers: True
         # load_iter: 36300
 
@@ -76,14 +76,3 @@ test:
         num_workers: 0
     sliding_window:
         window_size: ${train.dataset.patch_size}
-
-
-# infer:
-#     checkpointing:
-#         load_iter: 0
-#     dataset:
-#         _target_: project.datasets.infer_dataset.SynthRAD2023InferDataset
-#         root: "/mnt/homeGPU/tenayat/data/TEST"
-#         num_workers: 0
-#     sliding_window:
-#         window_size: ${train.dataset.patch_size}

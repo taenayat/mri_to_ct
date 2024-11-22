@@ -1,87 +1,88 @@
-project: "./mri_to_ct/"
-train:
-    output_dir: "/mnt/homeGPU/tenayat/mri_to_ct/24_11_19_baseline_400epoch"
-    cuda: True
-    n_iters:  48400 # 121 * 400 epochs
-    n_iters_decay: 12100 # 121 * 100
-    batch_size:  1
-    mixed_precision: False
-
-    logging:
-        freq: 10
-        tensorboard: True
-    
-    checkpointing:
-        freq: 2420 # 20 epochs
-
-    dataset: 
-        _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
-        root: "/mnt/homeGPU/tenayat/data/TRAIN"
-        num_workers: 0
-        patch_size: [32, 160, 160]
-        pin_memory: True
-        augmentation: False
-        unpaired: True
-        
-    gan: 
-        _target_: ganslate.nn.gans.unpaired.CycleGAN
-        generator:  
-            _target_: ganslate.nn.generators.Vnet3D
-            use_memory_saving: False
-            use_inverse: False
-            in_out_channels:
-                AB: [1, 1]
-            down_blocks: [2, 2, 3]
-            up_blocks: [3, 3, 3]
-
-        discriminator:  
-            _target_: ganslate.nn.discriminators.PatchGAN3D
-            n_layers: 2
-            in_channels: 
-                B: 1
-
-        optimizer:
-            lr_D: 0.0002
-            lr_G: 0.0004
-            lambda_AB: 5.0
-            lambda_BA: 5.0
-            lambda_identity: 0
-            proportion_ssim: 0
-    
-    metrics:
-        discriminator_evolution: True
-
-
-val:
-    freq: ${train.checkpointing.freq}
-    dataset: 
-        _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
-        root: "/mnt/homeGPU/tenayat/data/VAL"
-        num_workers: 0
-        pin_memory: True
-    sliding_window:
-        window_size: ${train.dataset.patch_size}
-    metrics:
-        cycle_metrics: True
-        save_to_csv: True
-
-test:
-    checkpointing:
-        load_iter: 0
-    dataset: 
-        _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
-        root: "/mnt/homeGPU/tenayat/data/TEST"
-        num_workers: 0
-    sliding_window:
-        window_size: ${train.dataset.patch_size}
-
-
 infer:
-    checkpointing:
-        load_iter: 0
-    dataset:
-        _target_: project.datasets.infer_dataset.SynthRAD2023InferDataset
-        root: "/mnt/homeGPU/tenayat/data/TEST"
-        num_workers: 0
-    sliding_window:
-        window_size: ${train.dataset.patch_size}
+  checkpointing:
+    load_iter: 60500
+  dataset:
+    _target_: project.datasets.infer_dataset.SynthRAD2023InferDataset
+    num_workers: 0
+    root: /mnt/homeGPU/tenayat/data/TEST
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+project: ./mri_to_ct/
+test:
+  checkpointing:
+    load_iter: 60500
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    num_workers: 0
+    root: /mnt/homeGPU/tenayat/data/TEST
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+train:
+  batch_size: 1
+  checkpointing:
+    freq: 2420
+    load_iter: 36300
+    load_optimizers: true
+  cuda: true
+  dataset:
+    _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
+    augmentation: false
+    num_workers: 0
+    patch_size:
+    - 32
+    - 160
+    - 160
+    pin_memory: true
+    root: /mnt/homeGPU/tenayat/data/TRAIN
+    unpaired: true
+  gan:
+    _target_: ganslate.nn.gans.unpaired.CycleGAN
+    discriminator:
+      _target_: ganslate.nn.discriminators.PatchGAN3D
+      in_channels:
+        B: 1
+      n_layers: 2
+    generator:
+      _target_: ganslate.nn.generators.Vnet3D
+      down_blocks:
+      - 2
+      - 2
+      - 3
+      in_out_channels:
+        AB:
+        - 1
+        - 1
+      up_blocks:
+      - 3
+      - 3
+      - 3
+      use_inverse: false
+      use_memory_saving: false
+    optimizer:
+      lambda_AB: 5.0
+      lambda_BA: 5.0
+      lambda_identity: 0
+      lr_D: 0.0002
+      lr_G: 0.0004
+      proportion_ssim: 0
+  logging:
+    freq: 10
+    tensorboard: true
+  metrics:
+    discriminator_evolution: true
+  mixed_precision: false
+  n_iters: 48400
+  n_iters_decay: 12100
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/24_11_19_baseline_400epoch
+val:
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    num_workers: 0
+    pin_memory: true
+    root: /mnt/homeGPU/tenayat/data/VAL
+  freq: ${train.checkpointing.freq}
+  metrics:
+    cycle_metrics: true
+    save_to_csv: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
