@@ -15,7 +15,7 @@ ganslate infer config="$CONFIG_YAML"
 
 #run this on local to sync here with local machine
 # rsync -anv --exclude-from=mri_to_ct/exclude_list.txt tenayat@ngpu.ugr.es:/mnt/homeGPU/tenayat/ mri_to_ct/
-rsync -anv --exclude-from=mri_to_ct/exclude_list.txt --include-from=mri_to_ct/include_list.txt tenayat@ngpu.ugr.es:/mnt/homeGPU/tenayat/ mri_to_ct/
+rsync -anv conda4ganslate/lib/python3.9/site-packages/ganslate/ ganslate/ganslate
 rsync -avzP
 
 # either this or that:
