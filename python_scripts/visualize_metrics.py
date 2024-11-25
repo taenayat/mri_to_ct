@@ -13,13 +13,14 @@ axes = axes.flatten()
 
 # Plot each metric
 for i, column in enumerate(columns):
-    plot_data = np.array(data[column][100:])
-    if column in ['Losses/G_AB', 'Losses/D_B']:
-        plot_data = plot_data[plot_data < 5]
+    plot_data = np.array(data[column])
+    # plot_data = np.array(data[column][100:])
+    # if column in ['Losses/G_AB', 'Losses/D_B']:
+    #     plot_data = plot_data[plot_data < 5]
     # plot_data = savgol_filter(plot_data, 20, 3)
     plot_data = savgol_filter(plot_data, 300, 3)
-    # axes[i].plot(data.index, plot_data, label=column)
-    axes[i].plot(range(len(plot_data)), plot_data, label=column)
+    axes[i].plot(data.index*10/121, plot_data, label=column)
+    # axes[i].plot(range(len(plot_data)), plot_data, label=column)
     axes[i].set_title(column)
     axes[i].set_xlabel('Epoch')
     axes[i].set_ylabel('Value')
@@ -32,4 +33,4 @@ for j in range(i + 1, len(axes)):
 # Adjust layout and show the plot
 plt.tight_layout()
 # plt.show()
-plt.savefig(PATH+'loss_vis.png')
+plt.savefig(PATH+'loss_vis2.png')
