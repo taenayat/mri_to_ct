@@ -63,8 +63,14 @@ class SynthRAD2023ValTestDataset(Dataset):
 
         # print("OK")
 
-        CT_tensor = min_max_normalize(CT_tensor, CT_tensor.min(), CT_tensor.max())
-        MRI_tensor = min_max_normalize(MRI_tensor, MRI_tensor.min(), MRI_tensor.max())
+        # self.CT_min_value, self.CT_max_value = CT_tensor.min(), CT_tensor.max()
+        # self.MRI_min_value, self.MRI_max_value = MRI_tensor.min(), MRI_tensor.max()
+        self.min, self.max = -1024, 3000
+
+        # CT_tensor = min_max_normalize(CT_tensor, self.CT_min_value, self.CT_max_value)
+        # MRI_tensor = min_max_normalize(MRI_tensor, self.MRI_min_value, self.MRI_max_value)
+        CT_tensor = min_max_normalize(CT_tensor, self.min, self.max)
+        MRI_tensor = min_max_normalize(MRI_tensor, self.min, self.max)
         # print("OK")
 
         CT_tensor = CT_tensor.unsqueeze(0)
@@ -77,7 +83,12 @@ class SynthRAD2023ValTestDataset(Dataset):
 
         return {'A': MRI_tensor, 'B': CT_tensor, "masks": mask_dict,"metadata": {"mri_path": str(mri_sample)}}
 
-     
+
+    def denormalize(self, tensor):
+        print("denromalize method called")
+        return min_max_denormalize(tensor, self.min, self.max)
+
+
     def save(self, tensor, save_dir, metadata=None):
         # """ By default, ganslate logs images in png format. However, if you wish
         # to save images in a different way, then implement this `save()` method. 

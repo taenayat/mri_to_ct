@@ -2,7 +2,7 @@ project: "./mri_to_ct/"
 train:
     output_dir: "/mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp"
     cuda: True
-    n_iters:  3
+    n_iters:  2
     n_iters_decay: 0
     batch_size:  1
     mixed_precision: False
@@ -12,7 +12,7 @@ train:
         tensorboard: True
     
     checkpointing:
-        freq: 3
+        freq: 1
         # load_optimizers: True
         # load_iter: 36300
 
