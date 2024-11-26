@@ -1,5 +1,6 @@
 condaenv38/
 conda4ganslate/
+cuda11/
 brain/
 other_data/
 __pycache__/

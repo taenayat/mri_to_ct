@@ -1,9 +1,10 @@
 #!/bin/bash
 
 
-#SBATCH --job-name grace_test         # Process Name
-#SBATCH --partition dgx   # Queue to run
+#SBATCH --job-name test         # Process Name
+#SBATCH --partition dgx
 #SBATCH --gres=gpu:1              # Number of GPUs to use
+#SBATCH --output /mnt/homeGPU/tenayat/slurm_archive/slurm-%j.out
 
 
 export PATH="/opt/anaconda/anaconda3/bin:$PATH"
@@ -12,10 +13,14 @@ export PATH="/opt/anaconda/bin:$PATH"
 
 eval "$(conda shell.bash hook)"
 
-conda activate /mnt/homeGPU/tenayat/condaenv38
+# conda activate /mnt/homeGPU/tenayat/condaenv38
+# conda activate /mnt/homeGPU/tenayat/conda4ganslate
+# conda activate /mnt/homeGPU/ggomez/envs/torch2cu11
+conda activate /mnt/homeGPU/tenayat/cuda11
 
 export TFHUB_CACHE_DIR=.
 
-
-python neckmask_temporary.py
+which python
+# python neckmask_temporary.py
+python python_scripts/cuda_version_get.py
 

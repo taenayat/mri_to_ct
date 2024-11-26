@@ -1,7 +1,7 @@
 cd /mnt/homeGPU/tenayat
 
 # sbatch ganslate.sh mri_to_ct/experiments/cyclegan.yaml mae_clean_mask
-sbatch bash_scripts/ganslate.sh mri_to_ct/experiments/24_11_19_baseline_400epoch.yaml
+sbatch bash_scripts/ganslate.sh mri_to_ct/experiments/cyclegan_temp.yaml
 
 tail -f slurm_archive/slurm-5*.out
 
@@ -23,5 +23,4 @@ rsync -avzP
 #SBACTH --nodelist dgx1
 
 #SBATCH --partition dios
-
 python python_scripts/delete_redundant_models.py -e 24_11_19_baseline_400epoch
