@@ -63,7 +63,9 @@ class BaseValTestEngine(BaseEngineWithInference):
 
         # Denormalize the data if dataset has `denormalize` method defined.
         denormalize = getattr(self.current_data_loader.dataset, "denormalize", False)
+        print('if denormalize:', denormalize)
         if denormalize:
+            print("Denormalizing data...")
             pred, target = denormalize(pred.detach().clone()), denormalize(target.detach().clone())
             if compute_over_input:
                 original = denormalize(original.detach().clone())
