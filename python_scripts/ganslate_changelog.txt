@@ -50,3 +50,14 @@ to:
             self._log_images(iter_idx, normal_visuals, tag=mode)
 "
 
+6.
+mri_to_ct/dataset/val_test_dataset.py - line 87 (after __getitem__)
+from: ""
+to:
+"
+    def denormalize(self, tensor):
+        print("denromalize method called")
+        return min_max_denormalize(tensor, self.min, self.max)
+"
+
+
