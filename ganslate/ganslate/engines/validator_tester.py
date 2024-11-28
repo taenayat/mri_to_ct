@@ -63,10 +63,15 @@ class BaseValTestEngine(BaseEngineWithInference):
 
         # Denormalize the data if dataset has `denormalize` method defined.
         denormalize = getattr(self.current_data_loader.dataset, "denormalize", False)
-        print('if denormalize:', denormalize)
+        # print('if denormalize:', denormalize)
         if denormalize:
-            print("Denormalizing data...")
+            # print("Denormalizing data...")
+            print('in _calculate_metrics original:', original.detach().clone().min(), original.detach().clone().max())
+            print('in _calculate_metrics pred before:', pred.detach().clone().min(), pred.detach().clone().max())
+            print('in _calculate_metrics target before:', target.detach().clone().min(), target.detach().clone().max())
             pred, target = denormalize(pred.detach().clone()), denormalize(target.detach().clone())
+            print('in _calculate_metrics pred after:', pred.min(), pred.max())
+            print('in _calculate_metrics target after:', target.min(), target.max())
             if compute_over_input:
                 original = denormalize(original.detach().clone())
 
