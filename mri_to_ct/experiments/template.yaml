@@ -8,11 +8,11 @@ train:
     mixed_precision: False
 
     logging:
-        freq: 10
+        freq: 30
         tensorboard: True
     
     checkpointing:
-        freq: 1000
+        freq: 1200
         # load_optimizers: True
         # load_iter: 36300
 
