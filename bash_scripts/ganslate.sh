@@ -32,8 +32,8 @@ echo "Using ${1} experiment"
 
 ganslate train config="$CONFIG_YAML"
 
-# python python_scripts/get_best_model.py --config $CONFIG_YAML --selection-metric "$METRIC"
+python python_scripts/get_best_model.py --config $CONFIG_YAML --selection-metric "$METRIC"
 
-# ganslate test config="$CONFIG_YAML"
+ganslate test config="$CONFIG_YAML"
 
 printf "\n\nFINISHED\n\n"

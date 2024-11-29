@@ -24,3 +24,4 @@ rsync -avzP
 
 #SBATCH --partition dios
 python python_scripts/delete_redundant_models.py -e 24_11_19_baseline_400epoch
+
