@@ -6,3 +6,6 @@ python setup.py sdist bdist_wheel
 pip install dist/ganslate-0.1.1-py3-none-any.whl
 
 pip install matplotlib
+
+# for hyperparameter optimization
+pip install optuna plotly kaleido

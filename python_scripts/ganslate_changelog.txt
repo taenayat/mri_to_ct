@@ -65,6 +65,7 @@ to:
         CT_tensor = min_max_normalize(CT_tensor, self.CT_min_value, self.CT_max_value)
         MRI_tensor = min_max_normalize(MRI_tensor, self.MRI_min_value, self.MRI_max_value)
 "
+
 6.
 mri_to_ct/dataset/val_test_dataset.py - line 87 (after __getitem__)
 from: ""
@@ -73,5 +74,10 @@ to:
     def denormalize(self, tensor):
         return min_max_denormalize(tensor, self.CT_min_value, self.CT_max_value)
 "
+
+7.
+path/utils/trackers/training.py - line 66:
+from: "visuals = parse_visuals(visuals)"
+to: ""
 
 
