@@ -51,13 +51,27 @@ to:
 "
 
 6.
+mri_to_ct/dataset/val_test_dataset.py - line about 66 (in __getitem__)
+from: 
+"
+        CT_tensor = min_max_normalize(CT_tensor, CT_tensor.min(), CT_tensor.max())
+        MRI_tensor = min_max_normalize(MRI_tensor, MRI_tensor.min(), MRI_tensor.max())
+"
+to:
+"
+        self.MRI_min_value, self.MRI_max_value = MRI_tensor.min(), MRI_tensor.max()
+        self.CT_min_value, self.CT_max_value = -1024, 3000
+
+        CT_tensor = min_max_normalize(CT_tensor, self.CT_min_value, self.CT_max_value)
+        MRI_tensor = min_max_normalize(MRI_tensor, self.MRI_min_value, self.MRI_max_value)
+"
+6.
 mri_to_ct/dataset/val_test_dataset.py - line 87 (after __getitem__)
 from: ""
 to:
 "
     def denormalize(self, tensor):
-        print("denromalize method called")
-        return min_max_denormalize(tensor, self.min, self.max)
+        return min_max_denormalize(tensor, self.CT_min_value, self.CT_max_value)
 "
 
 
