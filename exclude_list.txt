@@ -2,7 +2,6 @@ condaenv38/
 conda4ganslate/
 cuda11/
 brain/
-other_data/
 __pycache__/
 mri_to_ct/__pycache__/
 mri_to_ct/*/*/images/

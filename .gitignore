@@ -5,6 +5,8 @@ mri_to_ct/*/test/
 data/
 slurm_archive
 cuda11/
+other_data/ganslate.zip
+
 
 
 ganslate/build
