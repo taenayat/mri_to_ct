@@ -1,20 +1,18 @@
 project: "./mri_to_ct/"
 train:
-    output_dir: "/mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp"
+    output_dir: "/mnt/homeGPU/tenayat/mri_to_ct/24_11_28_freshstart"
     cuda: True
-    n_iters:  1
+    n_iters: 24000 # 120 * 200 EPOCHS
     n_iters_decay: 0
     batch_size:  1
     mixed_precision: False
 
     logging:
-        freq: 1
+        freq: 30
         tensorboard: True
     
     checkpointing:
-        freq: 1
-        # load_optimizers: True
-        # load_iter: 36300
+        freq: 1200
 
     dataset: 
         _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset

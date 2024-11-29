@@ -1266,3 +1266,985 @@ G_AB: 11.083 D_B: 29.937 cycle_A: 2.372 G_BA: 10.397 D_A: 19.325 cycle_B: 3.258
 [2024-11-26 15:18:01][ganslate.utils.trackers.validation_testing][INFO] - 
 -------------------- (Val at iter 2) --------------------
 ssim: -0.394 mse: 2969221.983 nmse: 4.168 psnr: 3.743 mae: 1604.308 ssim_clean_mask: 0.526 mse_clean_mask: 1634298.157 nmse_clean_mask: 4.413 psnr_clean_mask: 9.912 mae_clean_mask: 1111.541 cycle_SSIM: 0.024 
+[2024-11-28 09:29:37][ganslate.utils.environment][INFO] - Configuration:
+project: ./mri_to_ct/
+mode: train
+train:
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp
+  batch_size: 1
+  cuda: true
+  mixed_precision: false
+  opt_level: O1
+  logging:
+    freq: 1
+    multi_modality_split: null
+    tensorboard: true
+    wandb: null
+    image_window: null
+  dataset:
+    _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
+    root: /mnt/homeGPU/tenayat/data/TRAIN
+    num_workers: 0
+    pin_memory: true
+    patch_size:
+    - 32
+    - 160
+    - 160
+    focal_region_proportion: 0.0
+    augmentation: false
+    unpaired: true
+  checkpointing:
+    load_iter: null
+    freq: 1
+    start_after: 0
+    load_optimizers: true
+  n_iters: 2
+  n_iters_decay: 0
+  gan:
+    _target_: ganslate.nn.gans.unpaired.CycleGAN
+    norm_type: instance
+    weight_init_type: normal
+    weight_init_gain: 0.02
+    optimizer:
+      adversarial_loss_type: lsgan
+      beta1: 0.5
+      beta2: 0.999
+      lr_D: 0.0002
+      lr_G: 0.0004
+      lambda_AB: 5.0
+      lambda_BA: 5.0
+      lambda_identity: 0.0
+      proportion_ssim: 0.0
+    generator:
+      _target_: ganslate.nn.generators.Vnet3D
+      in_out_channels:
+        AB:
+        - 1
+        - 1
+        BA: ${train.gan.generator.in_out_channels.AB}
+      use_memory_saving: false
+      use_inverse: false
+      first_layer_channels: 16
+      down_blocks:
+      - 2
+      - 2
+      - 3
+      up_blocks:
+      - 3
+      - 3
+      - 3
+      is_separable: false
+    discriminator:
+      _target_: ganslate.nn.discriminators.PatchGAN3D
+      in_channels:
+        B: 1
+        A: ${train.gan.discriminator.in_channels.B}
+      ndf: 64
+      n_layers: 2
+      kernel_size:
+      - 4
+      - 4
+      - 4
+    pool_size: 50
+  seed: null
+  metrics:
+    discriminator_evolution: true
+    ssim: false
+val:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/VAL
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  freq: ${train.checkpointing.freq}
+  start_after: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    cycle_metrics: true
+    save_to_csv: true
+test:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  checkpointing:
+    load_iter: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    compute_over_input: false
+    save_to_csv: true
+infer: null
+
+[2024-11-28 09:29:37][ganslate.utils.environment][INFO] - Saving checkpoints, logs and config to: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp
+[2024-11-28 09:29:37][ganslate.utils.environment][INFO] - Python version: 3.9.20 (main, Oct  3 2024, 07:27:41) 
+[GCC 11.2.0]
+[2024-11-28 09:29:37][ganslate.utils.environment][INFO] - PyTorch version: 2.5.1
+[2024-11-28 09:29:37][ganslate.utils.environment][INFO] - CUDA 11.8 - cuDNN 90100
+[2024-11-28 09:29:37][ganslate.utils.environment][INFO] - Global rank: 0
+[2024-11-28 09:29:37][ganslate.utils.environment][INFO] - Local rank: 0
+[2024-11-28 09:29:37][ganslate.nn.generators.vnet.vnet3d][INFO] - Invertible layers are disabled.
+[2024-11-28 08:31:07][ganslate.utils.environment][INFO] - Configuration:
+project: ./mri_to_ct/
+mode: train
+train:
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp
+  batch_size: 1
+  cuda: true
+  mixed_precision: false
+  opt_level: O1
+  logging:
+    freq: 1
+    multi_modality_split: null
+    tensorboard: true
+    wandb: null
+    image_window: null
+  dataset:
+    _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
+    root: /mnt/homeGPU/tenayat/data/TRAIN
+    num_workers: 0
+    pin_memory: true
+    patch_size:
+    - 32
+    - 160
+    - 160
+    focal_region_proportion: 0.0
+    augmentation: false
+    unpaired: true
+  checkpointing:
+    load_iter: null
+    freq: 1
+    start_after: 0
+    load_optimizers: true
+  n_iters: 2
+  n_iters_decay: 0
+  gan:
+    _target_: ganslate.nn.gans.unpaired.CycleGAN
+    norm_type: instance
+    weight_init_type: normal
+    weight_init_gain: 0.02
+    optimizer:
+      adversarial_loss_type: lsgan
+      beta1: 0.5
+      beta2: 0.999
+      lr_D: 0.0002
+      lr_G: 0.0004
+      lambda_AB: 5.0
+      lambda_BA: 5.0
+      lambda_identity: 0.0
+      proportion_ssim: 0.0
+    generator:
+      _target_: ganslate.nn.generators.Vnet3D
+      in_out_channels:
+        AB:
+        - 1
+        - 1
+        BA: ${train.gan.generator.in_out_channels.AB}
+      use_memory_saving: false
+      use_inverse: false
+      first_layer_channels: 16
+      down_blocks:
+      - 2
+      - 2
+      - 3
+      up_blocks:
+      - 3
+      - 3
+      - 3
+      is_separable: false
+    discriminator:
+      _target_: ganslate.nn.discriminators.PatchGAN3D
+      in_channels:
+        B: 1
+        A: ${train.gan.discriminator.in_channels.B}
+      ndf: 64
+      n_layers: 2
+      kernel_size:
+      - 4
+      - 4
+      - 4
+    pool_size: 50
+  seed: null
+  metrics:
+    discriminator_evolution: true
+    ssim: false
+val:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/VAL
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  freq: ${train.checkpointing.freq}
+  start_after: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    cycle_metrics: true
+    save_to_csv: true
+test:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  checkpointing:
+    load_iter: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    compute_over_input: false
+    save_to_csv: true
+infer: null
+
+[2024-11-28 08:31:07][ganslate.utils.environment][INFO] - Saving checkpoints, logs and config to: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp
+[2024-11-28 08:31:07][ganslate.utils.environment][INFO] - Python version: 3.9.20 (main, Oct  3 2024, 07:27:41) 
+[GCC 11.2.0]
+[2024-11-28 08:31:07][ganslate.utils.environment][INFO] - PyTorch version: 2.5.1
+[2024-11-28 08:31:07][ganslate.utils.environment][INFO] - CUDA 11.8 - cuDNN 90100
+[2024-11-28 08:31:07][ganslate.utils.environment][INFO] - Global rank: 0
+[2024-11-28 08:31:07][ganslate.utils.environment][INFO] - Local rank: 0
+[2024-11-28 08:31:07][ganslate.nn.generators.vnet.vnet3d][INFO] - Invertible layers are disabled.
+[2024-11-28 08:31:08][ganslate.nn.generators.vnet.vnet3d][INFO] - Invertible layers are disabled.
+[2024-11-28 08:31:08][ganslate.engines.trainer][INFO] - Training started.
+[2024-11-28 08:31:36][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1 | comp: 26.436, data: 1.337 | lr_G: 0.0004000, lr_D: 0.0002000) --------------------
+G_AB: 5.165 D_B: 7.047 cycle_A: 2.282 G_BA: 4.885 D_A: 7.123 cycle_B: 3.087 
+[2024-11-28 08:31:38][ganslate.engines.trainer][INFO] - Saving the model after 1 iterations.
+[2024-11-28 08:31:41][ganslate.engines.validator_tester][INFO] - Validation started.
+[2024-11-28 08:34:59][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 1) --------------------
+ssim: -0.308 mse: 3209637.300 nmse: 4.504 psnr: 3.407 mae: 1665.629 ssim_clean_mask: 0.539 mse_clean_mask: 1798093.883 nmse_clean_mask: 4.831 psnr_clean_mask: 9.527 mae_clean_mask: 1168.909 cycle_SSIM: 0.011 
+[2024-11-28 08:35:03][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2 | comp: 1.504, data: 0.677 | lr_G: 0.0004000, lr_D: 0.0002000) --------------------
+G_AB: 11.647 D_B: 35.718 cycle_A: 2.225 G_BA: 5.863 D_A: 15.834 cycle_B: 2.860 
+[2024-11-28 08:35:04][ganslate.engines.trainer][INFO] - Saving the model after 2 iterations.
+[2024-11-28 08:35:07][ganslate.engines.validator_tester][INFO] - Validation started.
+[2024-11-28 08:38:17][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 2) --------------------
+ssim: -0.344 mse: 3411026.167 nmse: 4.789 psnr: 3.141 mae: 1699.235 ssim_clean_mask: 0.542 mse_clean_mask: 1851114.954 nmse_clean_mask: 4.981 psnr_clean_mask: 9.389 mae_clean_mask: 1156.826 cycle_SSIM: 0.018 
+[2024-11-28 08:42:58][ganslate.utils.environment][INFO] - Configuration:
+project: ./mri_to_ct/
+mode: train
+train:
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp
+  batch_size: 1
+  cuda: true
+  mixed_precision: false
+  opt_level: O1
+  logging:
+    freq: 1
+    multi_modality_split: null
+    tensorboard: true
+    wandb: null
+    image_window: null
+  dataset:
+    _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
+    root: /mnt/homeGPU/tenayat/data/TRAIN
+    num_workers: 0
+    pin_memory: true
+    patch_size:
+    - 32
+    - 160
+    - 160
+    focal_region_proportion: 0.0
+    augmentation: false
+    unpaired: true
+  checkpointing:
+    load_iter: null
+    freq: 1
+    start_after: 0
+    load_optimizers: true
+  n_iters: 2
+  n_iters_decay: 0
+  gan:
+    _target_: ganslate.nn.gans.unpaired.CycleGAN
+    norm_type: instance
+    weight_init_type: normal
+    weight_init_gain: 0.02
+    optimizer:
+      adversarial_loss_type: lsgan
+      beta1: 0.5
+      beta2: 0.999
+      lr_D: 0.0002
+      lr_G: 0.0004
+      lambda_AB: 5.0
+      lambda_BA: 5.0
+      lambda_identity: 0.0
+      proportion_ssim: 0.0
+    generator:
+      _target_: ganslate.nn.generators.Vnet3D
+      in_out_channels:
+        AB:
+        - 1
+        - 1
+        BA: ${train.gan.generator.in_out_channels.AB}
+      use_memory_saving: false
+      use_inverse: false
+      first_layer_channels: 16
+      down_blocks:
+      - 2
+      - 2
+      - 3
+      up_blocks:
+      - 3
+      - 3
+      - 3
+      is_separable: false
+    discriminator:
+      _target_: ganslate.nn.discriminators.PatchGAN3D
+      in_channels:
+        B: 1
+        A: ${train.gan.discriminator.in_channels.B}
+      ndf: 64
+      n_layers: 2
+      kernel_size:
+      - 4
+      - 4
+      - 4
+    pool_size: 50
+  seed: null
+  metrics:
+    discriminator_evolution: true
+    ssim: false
+val:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/VAL
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  freq: ${train.checkpointing.freq}
+  start_after: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    cycle_metrics: true
+    save_to_csv: true
+test:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  checkpointing:
+    load_iter: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    compute_over_input: false
+    save_to_csv: true
+infer: null
+
+[2024-11-28 08:42:58][ganslate.utils.environment][INFO] - Saving checkpoints, logs and config to: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp
+[2024-11-28 08:42:58][ganslate.utils.environment][INFO] - Python version: 3.9.20 (main, Oct  3 2024, 07:27:41) 
+[GCC 11.2.0]
+[2024-11-28 08:42:58][ganslate.utils.environment][INFO] - PyTorch version: 2.5.1
+[2024-11-28 08:42:58][ganslate.utils.environment][INFO] - CUDA 11.8 - cuDNN 90100
+[2024-11-28 08:42:58][ganslate.utils.environment][INFO] - Global rank: 0
+[2024-11-28 08:42:58][ganslate.utils.environment][INFO] - Local rank: 0
+[2024-11-28 08:42:58][ganslate.nn.generators.vnet.vnet3d][INFO] - Invertible layers are disabled.
+[2024-11-28 08:42:59][ganslate.nn.generators.vnet.vnet3d][INFO] - Invertible layers are disabled.
+[2024-11-28 08:42:59][ganslate.engines.trainer][INFO] - Training started.
+[2024-11-28 08:43:21][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1 | comp: 20.523, data: 1.333 | lr_G: 0.0004000, lr_D: 0.0002000) --------------------
+G_AB: 5.437 D_B: 8.984 cycle_A: 2.316 G_BA: 5.303 D_A: 8.936 cycle_B: 3.180 
+[2024-11-28 08:43:22][ganslate.engines.trainer][INFO] - Saving the model after 1 iterations.
+[2024-11-28 08:43:25][ganslate.engines.validator_tester][INFO] - Validation started.
+[2024-11-28 08:46:41][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 1) --------------------
+ssim: -0.359 mse: 11147964614792.533 nmse: 3.869 psnr: 4.071 mae: 3168618.800 ssim_clean_mask: 0.514 mse_clean_mask: 6724274812552.816 nmse_clean_mask: 4.518 psnr_clean_mask: 9.818 mae_clean_mask: 2361481.397 cycle_SSIM: 0.012 
+[2024-11-28 08:46:45][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2 | comp: 1.513, data: 0.910 | lr_G: 0.0004000, lr_D: 0.0002000) --------------------
+G_AB: 4.795 D_B: 10.929 cycle_A: 2.330 G_BA: 3.511 D_A: 10.508 cycle_B: 3.486 
+[2024-11-28 08:46:46][ganslate.engines.trainer][INFO] - Saving the model after 2 iterations.
+[2024-11-28 08:46:49][ganslate.engines.validator_tester][INFO] - Validation started.
+[2024-11-28 08:50:00][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 2) --------------------
+ssim: -0.339 mse: 10882116485120.000 nmse: 3.776 psnr: 4.176 mae: 3143737.967 ssim_clean_mask: 0.505 mse_clean_mask: 6973654703232.406 nmse_clean_mask: 4.694 psnr_clean_mask: 9.655 mae_clean_mask: 2424408.649 cycle_SSIM: 0.018 
+[2024-11-28 09:06:33][ganslate.utils.environment][INFO] - Configuration:
+project: ./mri_to_ct/
+mode: train
+train:
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp
+  batch_size: 1
+  cuda: true
+  mixed_precision: false
+  opt_level: O1
+  logging:
+    freq: 1
+    multi_modality_split: null
+    tensorboard: true
+    wandb: null
+    image_window: null
+  dataset:
+    _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
+    root: /mnt/homeGPU/tenayat/data/TRAIN
+    num_workers: 0
+    pin_memory: true
+    patch_size:
+    - 32
+    - 160
+    - 160
+    focal_region_proportion: 0.0
+    augmentation: false
+    unpaired: true
+  checkpointing:
+    load_iter: null
+    freq: 1
+    start_after: 0
+    load_optimizers: true
+  n_iters: 1
+  n_iters_decay: 0
+  gan:
+    _target_: ganslate.nn.gans.unpaired.CycleGAN
+    norm_type: instance
+    weight_init_type: normal
+    weight_init_gain: 0.02
+    optimizer:
+      adversarial_loss_type: lsgan
+      beta1: 0.5
+      beta2: 0.999
+      lr_D: 0.0002
+      lr_G: 0.0004
+      lambda_AB: 5.0
+      lambda_BA: 5.0
+      lambda_identity: 0.0
+      proportion_ssim: 0.0
+    generator:
+      _target_: ganslate.nn.generators.Vnet3D
+      in_out_channels:
+        AB:
+        - 1
+        - 1
+        BA: ${train.gan.generator.in_out_channels.AB}
+      use_memory_saving: false
+      use_inverse: false
+      first_layer_channels: 16
+      down_blocks:
+      - 2
+      - 2
+      - 3
+      up_blocks:
+      - 3
+      - 3
+      - 3
+      is_separable: false
+    discriminator:
+      _target_: ganslate.nn.discriminators.PatchGAN3D
+      in_channels:
+        B: 1
+        A: ${train.gan.discriminator.in_channels.B}
+      ndf: 64
+      n_layers: 2
+      kernel_size:
+      - 4
+      - 4
+      - 4
+    pool_size: 50
+  seed: null
+  metrics:
+    discriminator_evolution: true
+    ssim: false
+val:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/VAL
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  freq: ${train.checkpointing.freq}
+  start_after: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    cycle_metrics: true
+    save_to_csv: true
+test:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  checkpointing:
+    load_iter: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    compute_over_input: false
+    save_to_csv: true
+infer: null
+
+[2024-11-28 09:06:33][ganslate.utils.environment][INFO] - Saving checkpoints, logs and config to: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp
+[2024-11-28 09:06:33][ganslate.utils.environment][INFO] - Python version: 3.9.20 (main, Oct  3 2024, 07:27:41) 
+[GCC 11.2.0]
+[2024-11-28 09:06:33][ganslate.utils.environment][INFO] - PyTorch version: 2.5.1
+[2024-11-28 09:06:33][ganslate.utils.environment][INFO] - CUDA 11.8 - cuDNN 90100
+[2024-11-28 09:06:33][ganslate.utils.environment][INFO] - Global rank: 0
+[2024-11-28 09:06:33][ganslate.utils.environment][INFO] - Local rank: 0
+[2024-11-28 09:06:33][ganslate.nn.generators.vnet.vnet3d][INFO] - Invertible layers are disabled.
+[2024-11-28 09:06:34][ganslate.nn.generators.vnet.vnet3d][INFO] - Invertible layers are disabled.
+[2024-11-28 09:06:34][ganslate.engines.trainer][INFO] - Training started.
+[2024-11-28 09:06:56][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1 | comp: 20.362, data: 1.196 | lr_G: 0.0004000, lr_D: 0.0002000) --------------------
+G_AB: 5.006 D_B: 8.199 cycle_A: 1.837 G_BA: 4.794 D_A: 7.536 cycle_B: 3.100 
+[2024-11-28 09:06:57][ganslate.engines.trainer][INFO] - Saving the model after 1 iterations.
+[2024-11-28 09:07:00][ganslate.engines.validator_tester][INFO] - Validation started.
+[2024-11-28 09:10:12][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 1) --------------------
+ssim: -0.300 mse: 12111156958549.334 nmse: 4.201 psnr: 3.713 mae: 3266064.083 ssim_clean_mask: 0.539 mse_clean_mask: 6664731075035.105 nmse_clean_mask: 4.454 psnr_clean_mask: 9.875 mae_clean_mask: 2297105.814 cycle_SSIM: -0.021 
+[2024-11-28 09:23:10][ganslate.utils.environment][INFO] - Configuration:
+project: ./mri_to_ct/
+mode: train
+train:
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp
+  batch_size: 1
+  cuda: true
+  mixed_precision: false
+  opt_level: O1
+  logging:
+    freq: 1
+    multi_modality_split: null
+    tensorboard: true
+    wandb: null
+    image_window: null
+  dataset:
+    _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
+    root: /mnt/homeGPU/tenayat/data/TRAIN
+    num_workers: 0
+    pin_memory: true
+    patch_size:
+    - 32
+    - 160
+    - 160
+    focal_region_proportion: 0.0
+    augmentation: false
+    unpaired: true
+  checkpointing:
+    load_iter: null
+    freq: 1
+    start_after: 0
+    load_optimizers: true
+  n_iters: 1
+  n_iters_decay: 0
+  gan:
+    _target_: ganslate.nn.gans.unpaired.CycleGAN
+    norm_type: instance
+    weight_init_type: normal
+    weight_init_gain: 0.02
+    optimizer:
+      adversarial_loss_type: lsgan
+      beta1: 0.5
+      beta2: 0.999
+      lr_D: 0.0002
+      lr_G: 0.0004
+      lambda_AB: 5.0
+      lambda_BA: 5.0
+      lambda_identity: 0.0
+      proportion_ssim: 0.0
+    generator:
+      _target_: ganslate.nn.generators.Vnet3D
+      in_out_channels:
+        AB:
+        - 1
+        - 1
+        BA: ${train.gan.generator.in_out_channels.AB}
+      use_memory_saving: false
+      use_inverse: false
+      first_layer_channels: 16
+      down_blocks:
+      - 2
+      - 2
+      - 3
+      up_blocks:
+      - 3
+      - 3
+      - 3
+      is_separable: false
+    discriminator:
+      _target_: ganslate.nn.discriminators.PatchGAN3D
+      in_channels:
+        B: 1
+        A: ${train.gan.discriminator.in_channels.B}
+      ndf: 64
+      n_layers: 2
+      kernel_size:
+      - 4
+      - 4
+      - 4
+    pool_size: 50
+  seed: null
+  metrics:
+    discriminator_evolution: true
+    ssim: false
+val:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/VAL
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  freq: ${train.checkpointing.freq}
+  start_after: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    cycle_metrics: true
+    save_to_csv: true
+test:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  checkpointing:
+    load_iter: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    compute_over_input: false
+    save_to_csv: true
+infer: null
+
+[2024-11-28 09:23:10][ganslate.utils.environment][INFO] - Saving checkpoints, logs and config to: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp
+[2024-11-28 09:23:10][ganslate.utils.environment][INFO] - Python version: 3.9.20 (main, Oct  3 2024, 07:27:41) 
+[GCC 11.2.0]
+[2024-11-28 09:23:10][ganslate.utils.environment][INFO] - PyTorch version: 2.5.1
+[2024-11-28 09:23:10][ganslate.utils.environment][INFO] - CUDA 11.8 - cuDNN 90100
+[2024-11-28 09:23:10][ganslate.utils.environment][INFO] - Global rank: 0
+[2024-11-28 09:23:10][ganslate.utils.environment][INFO] - Local rank: 0
+[2024-11-28 09:23:10][ganslate.nn.generators.vnet.vnet3d][INFO] - Invertible layers are disabled.
+[2024-11-28 09:23:10][ganslate.nn.generators.vnet.vnet3d][INFO] - Invertible layers are disabled.
+[2024-11-28 09:23:11][ganslate.engines.trainer][INFO] - Training started.
+[2024-11-28 09:24:25][ganslate.utils.environment][INFO] - Configuration:
+project: ./mri_to_ct/
+mode: train
+train:
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp
+  batch_size: 1
+  cuda: true
+  mixed_precision: false
+  opt_level: O1
+  logging:
+    freq: 1
+    multi_modality_split: null
+    tensorboard: true
+    wandb: null
+    image_window: null
+  dataset:
+    _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
+    root: /mnt/homeGPU/tenayat/data/TRAIN
+    num_workers: 0
+    pin_memory: true
+    patch_size:
+    - 32
+    - 160
+    - 160
+    focal_region_proportion: 0.0
+    augmentation: false
+    unpaired: true
+  checkpointing:
+    load_iter: null
+    freq: 1
+    start_after: 0
+    load_optimizers: true
+  n_iters: 1
+  n_iters_decay: 0
+  gan:
+    _target_: ganslate.nn.gans.unpaired.CycleGAN
+    norm_type: instance
+    weight_init_type: normal
+    weight_init_gain: 0.02
+    optimizer:
+      adversarial_loss_type: lsgan
+      beta1: 0.5
+      beta2: 0.999
+      lr_D: 0.0002
+      lr_G: 0.0004
+      lambda_AB: 5.0
+      lambda_BA: 5.0
+      lambda_identity: 0.0
+      proportion_ssim: 0.0
+    generator:
+      _target_: ganslate.nn.generators.Vnet3D
+      in_out_channels:
+        AB:
+        - 1
+        - 1
+        BA: ${train.gan.generator.in_out_channels.AB}
+      use_memory_saving: false
+      use_inverse: false
+      first_layer_channels: 16
+      down_blocks:
+      - 2
+      - 2
+      - 3
+      up_blocks:
+      - 3
+      - 3
+      - 3
+      is_separable: false
+    discriminator:
+      _target_: ganslate.nn.discriminators.PatchGAN3D
+      in_channels:
+        B: 1
+        A: ${train.gan.discriminator.in_channels.B}
+      ndf: 64
+      n_layers: 2
+      kernel_size:
+      - 4
+      - 4
+      - 4
+    pool_size: 50
+  seed: null
+  metrics:
+    discriminator_evolution: true
+    ssim: false
+val:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/VAL
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  freq: ${train.checkpointing.freq}
+  start_after: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    cycle_metrics: true
+    save_to_csv: true
+test:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.25
+    mode: gaussian
+  multi_dataset: null
+  checkpointing:
+    load_iter: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    compute_over_input: false
+    save_to_csv: true
+infer: null
+
+[2024-11-28 09:24:25][ganslate.utils.environment][INFO] - Saving checkpoints, logs and config to: /mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp
+[2024-11-28 09:24:25][ganslate.utils.environment][INFO] - Python version: 3.9.20 (main, Oct  3 2024, 07:27:41) 
+[GCC 11.2.0]
+[2024-11-28 09:24:25][ganslate.utils.environment][INFO] - PyTorch version: 2.5.1
+[2024-11-28 09:24:25][ganslate.utils.environment][INFO] - CUDA 11.8 - cuDNN 90100
+[2024-11-28 09:24:25][ganslate.utils.environment][INFO] - Global rank: 0
+[2024-11-28 09:24:25][ganslate.utils.environment][INFO] - Local rank: 0
+[2024-11-28 09:24:26][ganslate.nn.generators.vnet.vnet3d][INFO] - Invertible layers are disabled.
+[2024-11-28 09:24:26][ganslate.nn.generators.vnet.vnet3d][INFO] - Invertible layers are disabled.
+[2024-11-28 09:24:27][ganslate.engines.trainer][INFO] - Training started.
+[2024-11-28 09:24:50][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1 | comp: 21.111, data: 1.889 | lr_G: 0.0004000, lr_D: 0.0002000) --------------------
+G_AB: 2.590 D_B: 8.124 cycle_A: 2.121 G_BA: 3.661 D_A: 4.862 cycle_B: 3.850 
+[2024-11-28 09:24:51][ganslate.engines.trainer][INFO] - Saving the model after 1 iterations.
+[2024-11-28 09:24:53][ganslate.engines.validator_tester][INFO] - Validation started.
+[2024-11-28 09:28:05][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 1) --------------------
+ssim: -0.320 mse: 3097283.117 nmse: 4.349 psnr: 3.559 mae: 1643.339 ssim_clean_mask: 0.534 mse_clean_mask: 1664708.617 nmse_clean_mask: 4.499 psnr_clean_mask: 9.829 mae_clean_mask: 1132.312 cycle_SSIM: 0.019 
