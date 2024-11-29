@@ -68,8 +68,8 @@ class SynthRAD2023ValTestDataset(Dataset):
         # self.min, self.max = -1024, 3000
         self.CT_min_value, self.CT_max_value = -1024, 3000
 
-        print('in __getitem__ MRI before:', MRI_tensor.min(), MRI_tensor.max())
-        print('in __getitem__ CT before:', CT_tensor.min(), CT_tensor.max())
+        # print('in __getitem__ MRI before:', MRI_tensor.min(), MRI_tensor.max())
+        # print('in __getitem__ CT before:', CT_tensor.min(), CT_tensor.max())
 
         CT_tensor = min_max_normalize(CT_tensor, self.CT_min_value, self.CT_max_value)
         MRI_tensor = min_max_normalize(MRI_tensor, self.MRI_min_value, self.MRI_max_value)
@@ -84,18 +84,18 @@ class SynthRAD2023ValTestDataset(Dataset):
         mask_dict={"clean_mask": mask_tensor}
 
         # print(CT_tensor.shape, MRI_tensor.shape)
-        print('in __getitem__ MRI after:', MRI_tensor.min(), MRI_tensor.max())
-        print('in __getitem__ CT after:', CT_tensor.min(), CT_tensor.max())
+        # print('in __getitem__ MRI after:', MRI_tensor.min(), MRI_tensor.max())
+        # print('in __getitem__ CT after:', CT_tensor.min(), CT_tensor.max())
 
         return {'A': MRI_tensor, 'B': CT_tensor, "masks": mask_dict,"metadata": {"mri_path": str(mri_sample)}}
 
 
     def denormalize(self, tensor):
-        print('in denormalize before:', tensor.min(), tensor.max())
-        temp = min_max_denormalize(tensor, self.CT_min_value, self.CT_max_value)
-        print('in denormalize after:', temp.min(), temp.max())
-        return temp
-        # return min_max_denormalize(tensor, self.CT_min_value, self.CT_max_value)
+        # print('in denormalize before:', tensor.min(), tensor.max())
+        # temp = min_max_denormalize(tensor, self.CT_min_value, self.CT_max_value)
+        # print('in denormalize after:', temp.min(), temp.max())
+        # return temp
+        return min_max_denormalize(tensor, self.CT_min_value, self.CT_max_value)
 
 
     def save(self, tensor, save_dir, metadata=None):
