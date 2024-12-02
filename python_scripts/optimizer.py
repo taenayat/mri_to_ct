@@ -21,8 +21,6 @@ def number2string_formatter(lr):
 
 def objective(trial):
 
-    # gan_lr = trial.suggest_loguniform("gan_lr", 1e-6, 1e-3)
-    # disc_lr = trial.suggest_loguniform("disc_lr", 1e-6, 1e-3)
     gan_lr = trial.suggest_float("gan_lr", 1e-6, 1e-3, log=True)
     disc_lr = trial.suggest_float("disc_lr", 1e-6, 1e-3, log=True)
 
@@ -44,8 +42,8 @@ def objective(trial):
     with open(config_path, 'w') as file:
         yaml.dump(conf, file)
 
-    subprocess.run(f"ganslate train config={config_path}")
-    subprocess.run(f"ganslate test config={config_path}")
+    subprocess.run(f"ganslate train config={config_path}", shell=True)
+    subprocess.run(f"ganslate test config={config_path}", shell=True)
 
     # TEMP
     # output_path = '/mnt/homeGPU/tenayat/mri_to_ct/24_11_28_freshstart'
