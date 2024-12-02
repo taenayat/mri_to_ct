@@ -8,3 +8,7 @@ mri_to_ct/*/*/images/
 mri_to_ct/*/checkpoints/
 mri_to_ct/*/output/
 mri_to_ct/*/infer/
+mri_to_ct/*/*/*/images/
+mri_to_ct/*/*/checkpoints/
+mri_to_ct/*/*/output/
+mri_to_ct/*/*/infer/

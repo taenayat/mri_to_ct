@@ -19,7 +19,6 @@ export TFHUB_CACHE_DIR=.
 set -euo pipefail
 
 # Activating conda enviroment
-# conda activate /mnt/homeGPU/tenayat/conda4ganslate
 conda activate /mnt/homeGPU/tenayat/cuda11
 
 cd /mnt/homeGPU/tenayat
