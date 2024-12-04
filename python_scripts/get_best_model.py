@@ -34,7 +34,7 @@ def main(config,selection_metric):
 
     print("BEST ITERATION {} FOR METRIC {}".format(best_iteration, selection_metric))
                 
-    config_params["infer"]["checkpointing"]["load_iter"] = int(best_iteration)
+    # config_params["infer"]["checkpointing"]["load_iter"] = int(best_iteration)
     config_params["test"]["checkpointing"]["load_iter"] = int(best_iteration)
 
     # Save yaml file in the same file 
