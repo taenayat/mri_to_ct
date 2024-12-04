@@ -1,7 +1,7 @@
 project: ./mri_to_ct/
 test:
   checkpointing:
-    load_iter: 21600
+    load_iter: 13200
   dataset:
     _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
     num_workers: 0
@@ -60,9 +60,9 @@ train:
   metrics:
     discriminator_evolution: true
   mixed_precision: false
-  n_iters: 20400
-  n_iters_decay: 3600
-  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/24_12_02_new_lr
+  n_iters: 24000
+  n_iters_decay: 0
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/24_12_03_normalization/zscore
 val:
   dataset:
     _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset

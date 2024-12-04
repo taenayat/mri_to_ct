@@ -1,6 +1,6 @@
 project: "./mri_to_ct/"
 train:
-    output_dir: "/mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp"
+    output_dir: "/mnt/homeGPU/tenayat/mri_to_ct/24_12_04_squeeze2"
     cuda: True
     n_iters:  24000
     n_iters_decay: 0
@@ -13,8 +13,6 @@ train:
     
     checkpointing:
         freq: 1200
-        # load_optimizers: True
-        # load_iter: 36300
 
     dataset: 
         _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
@@ -76,14 +74,3 @@ test:
         num_workers: 0
     sliding_window:
         window_size: ${train.dataset.patch_size}
-
-
-# infer:
-#     checkpointing:
-#         load_iter: 0
-#     dataset:
-#         _target_: project.datasets.infer_dataset.SynthRAD2023InferDataset
-#         root: "/mnt/homeGPU/tenayat/data/TEST"
-#         num_workers: 0
-#     sliding_window:
-#         window_size: ${train.dataset.patch_size}

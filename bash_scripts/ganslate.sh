@@ -3,7 +3,7 @@
 # Job name
 #SBATCH --job-name cyclegan
 #SBATCH --output /mnt/homeGPU/tenayat/slurm_archive/slurm-%j.out
-#SBATCH --partition dgx
+#SBATCH --partition dgx2
 
 #SBACTH --mem 64G
 
