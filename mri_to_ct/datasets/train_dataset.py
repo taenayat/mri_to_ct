@@ -5,7 +5,7 @@ from ganslate.utils.io import make_dataset_of_files
 from ganslate.utils import sitk_utils
 
 from ganslate.data.utils.stochastic_focal_patching import StochasticFocalPatchSampler
-from ganslate.data.utils.normalization import min_max_normalize
+from ganslate.data.utils.normalization import min_max_normalize, z_score_normalize, z_score_clip, z_score_squeeze
 
 from typing import Tuple
 from dataclasses import dataclass
@@ -84,6 +84,8 @@ class SynthRAD2023TrainDataset(Dataset):
 
         CT_tensor = sitk_utils.get_tensor(CT_image)
         MRI_tensor = sitk_utils.get_tensor(MRI_image)
+        # MRI_min_value, MRI_max_value = MRI_tensor.min(), MRI_tensor.max()
+        MRI_tensor = z_score_squeeze(MRI_tensor)
 
         if self.transformations:
             CT_tensor = CT_tensor.unsqueeze(0)
@@ -98,7 +100,10 @@ class SynthRAD2023TrainDataset(Dataset):
         CT_patch, MRI_patch = self.patch_sampler.get_patch_pair(CT_tensor, MRI_tensor)
 
         CT_patch = min_max_normalize(CT_patch, -1024, 3000)
-        MRI_patch = min_max_normalize(MRI_patch, -1024, 3000)
+        # MRI_patch = min_max_normalize(MRI_patch, MRI_min_value, MRI_max_value) 
+        # MRI_patch = z_score_normalize(MRI_patch)
+        # MRI_patch = z_score_clip(MRI_patch)
+        # MRI_patch = z_score_squeeze(MRI_patch)
 
         CT_patch = CT_patch.unsqueeze(0)
         MRI_patch = MRI_patch.unsqueeze(0)

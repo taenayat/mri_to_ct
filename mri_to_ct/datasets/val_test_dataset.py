@@ -6,7 +6,7 @@ import SimpleITK as sitk
 from ganslate.utils.io import make_dataset_of_files
 from ganslate.utils import sitk_utils
 
-from ganslate.data.utils.normalization import min_max_normalize, min_max_denormalize
+from ganslate.data.utils.normalization import min_max_normalize, min_max_denormalize, z_score_normalize, z_score_clip, z_score_squeeze
 
 from dataclasses import dataclass
 
@@ -64,7 +64,7 @@ class SynthRAD2023ValTestDataset(Dataset):
         # print("OK")
 
         # self.CT_min_value, self.CT_max_value = CT_tensor.min(), CT_tensor.max()
-        self.MRI_min_value, self.MRI_max_value = MRI_tensor.min(), MRI_tensor.max()
+        # MRI_min_value, MRI_max_value = MRI_tensor.min(), MRI_tensor.max()
         # self.min, self.max = -1024, 3000
         self.CT_min_value, self.CT_max_value = -1024, 3000
 
@@ -72,7 +72,10 @@ class SynthRAD2023ValTestDataset(Dataset):
         # print('in __getitem__ CT before:', CT_tensor.min(), CT_tensor.max())
 
         CT_tensor = min_max_normalize(CT_tensor, self.CT_min_value, self.CT_max_value)
-        MRI_tensor = min_max_normalize(MRI_tensor, self.MRI_min_value, self.MRI_max_value)
+        MRI_tensor = z_score_squeeze(MRI_tensor)
+        # MRI_tensor = z_score_clip(MRI_tensor)
+        # MRI_tensor = z_score_normalize(MRI_tensor)
+        # MRI_tensor = min_max_normalize(MRI_tensor, MRI_min_value, MRI_max_value)
         # CT_tensor = min_max_normalize(CT_tensor, self.min, self.max)
         # MRI_tensor = min_max_normalize(MRI_tensor, self.min, self.max)
         # print("OK")
