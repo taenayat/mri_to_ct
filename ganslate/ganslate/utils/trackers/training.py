@@ -63,7 +63,7 @@ class TrainingTracker(BaseTracker):
         def log_visuals():
             self._save_image(visuals, self.iter_idx)
 
-        # visuals = parse_visuals(visuals)
+        visuals = parse_visuals(visuals)
         losses = parse_losses(losses)
         metrics = parse_metrics(metrics)
 
