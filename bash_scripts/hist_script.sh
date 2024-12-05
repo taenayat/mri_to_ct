@@ -23,5 +23,7 @@ rsync -avzP
 #SBACTH --nodelist dgx1
 
 #SBATCH --partition dios
+#SBACTH --nodelist hera
+
 python python_scripts/delete_redundant_models.py -e 24_11_19_baseline_400epoch
 

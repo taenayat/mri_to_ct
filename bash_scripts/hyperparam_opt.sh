@@ -3,7 +3,7 @@
 # Job name
 #SBATCH --job-name cyclegan
 #SBATCH --output /mnt/homeGPU/tenayat/slurm_archive/slurm-%j.out
-#SBATCH --partition dgx2
+#SBATCH --partition dgx
 
 #SBACTH --mem 64G
 
@@ -26,6 +26,6 @@ cd /mnt/homeGPU/tenayat
 
 METRIC="mae_clean_mask"
 
-python python_scripts/optimizer.py
+python python_scripts/optimizer_patchsize.py
 
 printf "\n\nFINISHED\n\n"

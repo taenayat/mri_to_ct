@@ -1,7 +1,7 @@
 project: ./mri_to_ct/
 test:
   checkpointing:
-    load_iter: 22800
+    load_iter: ${train.n_iters}
   dataset:
     _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
     num_workers: 0
@@ -11,18 +11,16 @@ test:
 train:
   batch_size: 1
   checkpointing:
-    freq: 1200
-    load_iter: 15600
-    load_optimizers: true
+    freq: ${train.n_iters}
   cuda: true
   dataset:
     _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
     augmentation: false
     num_workers: 0
     patch_size:
+    - 64
     - 32
-    - 160
-    - 160
+    - 32
     pin_memory: true
     root: /mnt/homeGPU/tenayat/data/TRAIN
     unpaired: true
@@ -62,16 +60,16 @@ train:
   metrics:
     discriminator_evolution: true
   mixed_precision: false
-  n_iters: 24000
+  n_iters: 6000
   n_iters_decay: 0
-  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/24_12_04_squeeze2
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/24_12_05_patch/64_32_32
 val:
   dataset:
     _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
     num_workers: 0
     pin_memory: true
     root: /mnt/homeGPU/tenayat/data/VAL
-  freq: ${train.checkpointing.freq}
+  freq: 100000
   metrics:
     cycle_metrics: true
     save_to_csv: true
