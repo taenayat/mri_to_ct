@@ -1,0 +1,2 @@
+exp_name,ssim,mse,nmse,psnr,mae,ssim_clean_mask,mse_clean_mask,nmse_clean_mask,psnr_clean_mask,mae_clean_mask
+24_12_05_patch_32_160_160,0.42 ± 0.07,148464.37 ± 26425.21,0.21 ± 0.04,16.83 ± 1.33,188.66 ± 15.48,0.56 ± 0.05,286061.63 ± 43339.67,0.78 ± 0.14,17.42 ± 1.46,318.00 ± 24.26
