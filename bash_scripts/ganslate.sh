@@ -3,7 +3,8 @@
 # Job name
 #SBATCH --job-name cyclegan
 #SBATCH --output /mnt/homeGPU/tenayat/slurm_archive/slurm-%j.out
-#SBATCH --partition dgx2
+#SBATCH --partition dios
+#SBACTH --nodelist hera
 
 #SBACTH --mem 64G
 
@@ -34,5 +35,7 @@ ganslate train config="$CONFIG_YAML"
 python python_scripts/get_best_model.py --config $CONFIG_YAML --selection-metric "$METRIC"
 
 ganslate test config="$CONFIG_YAML"
+
+python python_scripts/test_average.py -d $CONFIG_YAML
 
 printf "\n\nFINISHED\n\n"
