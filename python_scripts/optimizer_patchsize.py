@@ -52,6 +52,7 @@ def objective(trial):
 
         subprocess.run(f"ganslate train config={config_path}", shell=True)
         subprocess.run(f"ganslate test config={config_path}", shell=True)
+        subprocess.run(f"python python_scripts/test_average.py -d {config_path}", shell=True)
 
         metrics_df = pd.read_csv(os.path.join(output_path, 'test', 'metrics.csv'), index_col=0)
         metrics_df = metrics_df.mean()
