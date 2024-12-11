@@ -1,5 +1,6 @@
 from torch.utils.tensorboard import SummaryWriter
 from ganslate.utils.trackers.utils import process_visuals_wandb_tensorboard
+from torch.cuda import is_available, memory_allocated, memory_reserved
 
 
 class TensorboardTracker:
@@ -33,6 +34,13 @@ class TensorboardTracker:
         if metrics is not None:
             for name, metric in metrics.items():
                 self.writer.add_scalar(f"Metrics ({mode})/{name}", metric, iter_idx)
+
+        # GPU Usage
+        if is_available():
+            gpu_memory_reserved = memory_reserved()
+            gpu_memory_allocated = memory_allocated()
+            self.writer.add_scalar("GPU_RAM/Reserved", gpu_memory_reserved, iter_idx)
+            self.writer.add_scalar("GPU_RAM/Allocated", gpu_memory_allocated, iter_idx)
 
         # Normal images
         if visuals is not None:

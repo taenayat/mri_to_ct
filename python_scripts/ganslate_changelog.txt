@@ -75,6 +75,103 @@ to:
         return min_max_denormalize(tensor, self.CT_min_value, self.CT_max_value)
 "
 
+7.
+path/utils/trackers/tensorboard.py - line 39
+from: ""
+to:
+"
+from torch.cuda import is_available, memory_allocated, memory_reserved
+
+        if is_available():
+            gpu_memory_reserved = memory_reserved()
+            gpu_memory_allocated = memory_allocated()
+            self.writer.add_scalar("GPU_RAM/Reserved", gpu_memory_reserved, iter_idx)
+            self.writer.add_scalar("GPU_RAM/Allocated", gpu_memory_allocated, iter_idx)
+"
+
+8.
+path/data/utils/ops.py
+from:
+"
+import numpy as np
+
+
+def pad(volume, target_shape):
+    assert len(target_shape) == len(volume.shape)
+    # By default no padding
+    pad_width = [(0, 0) for _ in range(len(target_shape))]
+
+    for dim in range(len(target_shape)):
+        if target_shape[dim] > volume.shape[dim]:
+            pad_total = target_shape[dim] - volume.shape[dim]
+            pad_per_side = pad_total // 2
+            pad_width[dim] = (pad_per_side, pad_total % 2 + pad_per_side)
+
+    return np.pad(volume, pad_width, 'constant', constant_values=volume.min())
+"
+to:
+"
+import torch
+
+def pad(volume, target_shape):
+    assert len(target_shape) == len(volume.shape)
+    
+    # Default no padding
+    pad_width = []
+    
+    for dim in range(len(target_shape) - 1, -1, -1):  # PyTorch's pad expects reversed order
+        if target_shape[dim] > volume.shape[dim]:
+            pad_total = target_shape[dim] - volume.shape[dim]
+            pad_per_side = pad_total // 2
+            pad_width.extend([pad_per_side, pad_total % 2 + pad_per_side])
+        else:
+            pad_width.extend([0, 0])
+    # print(pad_width)
+    padded_volume = torch.nn.functional.pad(
+        volume, pad_width, mode='constant', value=volume.min().item()
+    )
+    return padded_volume
+"
+
+9.
+mri_to_ct/dataset/val_test_dataset.py - new __getitem__
+to:
+"
+    def __getitem__(self, index):
+        final_index = index % self.num_datapoints
+        
+        ct_sample=self.ct_path[final_index]
+        mri_sample=self.mri_path[final_index]
+        mask_sample=self.mask_path[final_index]
+
+
+        CT_image = sitk_utils.load(ct_sample)
+        MRI_image = sitk_utils.load(mri_sample)
+        mask = sitk_utils.load(mask_sample)
+
+        CT_tensor = sitk_utils.get_tensor(CT_image)
+        MRI_tensor = sitk_utils.get_tensor(MRI_image)
+        mask_tensor = sitk_utils.get_tensor(mask)
+
+        self.CT_min_value, self.CT_max_value = -1024, 3000
+        CT_tensor = min_max_normalize(CT_tensor, self.CT_min_value, self.CT_max_value)
+        MRI_tensor = z_score_squeeze(MRI_tensor)
+
+        # print('before pad', MRI_tensor.shape, CT_tensor.shape)
+        CT_tensor = pad(CT_tensor, (262,284,280))
+        MRI_tensor = pad(MRI_tensor, (262,284,280))
+        mask_tensor = pad(mask_tensor, (262,284,280))
+        # print('after pad', MRI_tensor.shape, CT_tensor.shape)
+
+        CT_tensor = CT_tensor.unsqueeze(0)
+        MRI_tensor = MRI_tensor.unsqueeze(0)
+        mask_tensor = mask_tensor.unsqueeze(0)
+
+        mask_dict={"clean_mask": mask_tensor}
+        return {'A': MRI_tensor, 'B': CT_tensor, "masks": mask_dict,"metadata": {"mri_path": str(mri_sample)}}
+"
+
+
 
 
 
