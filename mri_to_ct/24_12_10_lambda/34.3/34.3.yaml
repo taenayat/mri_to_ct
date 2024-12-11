@@ -1,0 +1,73 @@
+project: ./mri_to_ct/
+test:
+  checkpointing:
+    load_iter: ${train.n_iters}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    num_workers: 0
+    root: /mnt/homeGPU/tenayat/data/TEST
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+train:
+  batch_size: 1
+  checkpointing:
+    freq: ${train.n_iters}
+  cuda: true
+  dataset:
+    _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
+    augmentation: false
+    num_workers: 0
+    patch_size:
+    - 32
+    - 160
+    - 160
+    pin_memory: true
+    root: /mnt/homeGPU/tenayat/data/TRAIN
+  gan:
+    _target_: ganslate.nn.gans.paired.Pix2PixConditionalGAN
+    discriminator:
+      _target_: ganslate.nn.discriminators.PatchGAN3D
+      in_channels:
+        B: 2
+      n_layers: 2
+    generator:
+      _target_: ganslate.nn.generators.Vnet3D
+      down_blocks:
+      - 2
+      - 2
+      - 3
+      in_out_channels:
+        AB:
+        - 1
+        - 1
+      up_blocks:
+      - 3
+      - 3
+      - 3
+      use_inverse: false
+      use_memory_saving: false
+    optimizer:
+      lambda_pix2pix: 34.30805514340888
+      lr_D: 2.0e-05
+      lr_G: 0.0005
+  logging:
+    freq: 30
+    tensorboard: true
+  metrics:
+    discriminator_evolution: true
+  mixed_precision: false
+  n_iters: 6000
+  n_iters_decay: 0
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/24_12_10_lambda/34.3
+val:
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    num_workers: 0
+    pin_memory: true
+    root: /mnt/homeGPU/tenayat/data/VAL
+  freq: 100000
+  metrics:
+    cycle_metrics: false
+    save_to_csv: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
