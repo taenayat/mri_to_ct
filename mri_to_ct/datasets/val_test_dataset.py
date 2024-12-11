@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from torch.utils.data import Dataset
 
 from ganslate import configs
+from ganslate.data.utils.ops import pad
 
 
 
@@ -35,69 +36,40 @@ class SynthRAD2023ValTestDataset(Dataset):
         self.num_datapoints = len(self.mri_path)
 
     def __getitem__(self, index):
-        # print("ME ESTAN LLAMANDO VALTEST", index, self.num_datapoints)
         final_index = index % self.num_datapoints
-
-        # print("OK")
         
         ct_sample=self.ct_path[final_index]
         mri_sample=self.mri_path[final_index]
         mask_sample=self.mask_path[final_index]
 
-        # print(ct_sample, mri_sample)
-        # print("OK")
 
         CT_image = sitk_utils.load(ct_sample)
-        # print(CT_image.GetSize())
-
         MRI_image = sitk_utils.load(mri_sample)
-        # print(MRI_image.GetSize())
-
         mask = sitk_utils.load(mask_sample)
-        # print(MRI_image.GetSize())
-        # print("OK")
 
         CT_tensor = sitk_utils.get_tensor(CT_image)
         MRI_tensor = sitk_utils.get_tensor(MRI_image)
         mask_tensor = sitk_utils.get_tensor(mask)
 
-        # print("OK")
-
-        # self.CT_min_value, self.CT_max_value = CT_tensor.min(), CT_tensor.max()
-        # MRI_min_value, MRI_max_value = MRI_tensor.min(), MRI_tensor.max()
-        # self.min, self.max = -1024, 3000
         self.CT_min_value, self.CT_max_value = -1024, 3000
-
-        # print('in __getitem__ MRI before:', MRI_tensor.min(), MRI_tensor.max())
-        # print('in __getitem__ CT before:', CT_tensor.min(), CT_tensor.max())
-
         CT_tensor = min_max_normalize(CT_tensor, self.CT_min_value, self.CT_max_value)
         MRI_tensor = z_score_squeeze(MRI_tensor)
-        # MRI_tensor = z_score_clip(MRI_tensor)
-        # MRI_tensor = z_score_normalize(MRI_tensor)
-        # MRI_tensor = min_max_normalize(MRI_tensor, MRI_min_value, MRI_max_value)
-        # CT_tensor = min_max_normalize(CT_tensor, self.min, self.max)
-        # MRI_tensor = min_max_normalize(MRI_tensor, self.min, self.max)
-        # print("OK")
+
+        # print('before pad', MRI_tensor.shape, CT_tensor.shape)
+        CT_tensor = pad(CT_tensor, (262,284,280))
+        MRI_tensor = pad(MRI_tensor, (262,284,280))
+        mask_tensor = pad(mask_tensor, (262,284,280))
+        # print('after pad', MRI_tensor.shape, CT_tensor.shape)
 
         CT_tensor = CT_tensor.unsqueeze(0)
         MRI_tensor = MRI_tensor.unsqueeze(0)
         mask_tensor = mask_tensor.unsqueeze(0)
 
         mask_dict={"clean_mask": mask_tensor}
-
-        # print(CT_tensor.shape, MRI_tensor.shape)
-        # print('in __getitem__ MRI after:', MRI_tensor.min(), MRI_tensor.max())
-        # print('in __getitem__ CT after:', CT_tensor.min(), CT_tensor.max())
-
         return {'A': MRI_tensor, 'B': CT_tensor, "masks": mask_dict,"metadata": {"mri_path": str(mri_sample)}}
 
 
     def denormalize(self, tensor):
-        # print('in denormalize before:', tensor.min(), tensor.max())
-        # temp = min_max_denormalize(tensor, self.CT_min_value, self.CT_max_value)
-        # print('in denormalize after:', temp.min(), temp.max())
-        # return temp
         return min_max_denormalize(tensor, self.CT_min_value, self.CT_max_value)
 
 

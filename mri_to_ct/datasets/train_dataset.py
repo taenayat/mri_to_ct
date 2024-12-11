@@ -98,12 +98,9 @@ class SynthRAD2023TrainDataset(Dataset):
             MRI_tensor = MRI_tensor.squeeze(0)
 
         CT_patch, MRI_patch = self.patch_sampler.get_patch_pair(CT_tensor, MRI_tensor)
-
         CT_patch = min_max_normalize(CT_patch, -1024, 3000)
-        # MRI_patch = min_max_normalize(MRI_patch, MRI_min_value, MRI_max_value) 
-        # MRI_patch = z_score_normalize(MRI_patch)
-        # MRI_patch = z_score_clip(MRI_patch)
-        # MRI_patch = z_score_squeeze(MRI_patch)
+
+        # print('train shape:', MRI_patch.shape, CT_patch.shape)
 
         CT_patch = CT_patch.unsqueeze(0)
         MRI_patch = MRI_patch.unsqueeze(0)

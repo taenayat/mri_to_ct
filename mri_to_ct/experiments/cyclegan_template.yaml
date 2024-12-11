@@ -23,10 +23,10 @@ train:
         patch_size: [32, 160, 160]
         pin_memory: True
         augmentation: False
-
+        unpaired: True
         
     gan: 
-        _target_: ganslate.nn.gans.paired.Pix2PixConditionalGAN
+        _target_: ganslate.nn.gans.unpaired.CycleGAN
         generator:  
             _target_: ganslate.nn.generators.Vnet3D
             use_memory_saving: False
@@ -40,12 +40,15 @@ train:
             _target_: ganslate.nn.discriminators.PatchGAN3D
             n_layers: 2
             in_channels: 
-                B: 2
+                B: 1
 
         optimizer:
             lr_D: 0.00002
             lr_G: 0.0005
-            lambda_pix2pix: 30.0
+            lambda_AB: 5.0
+            lambda_BA: 5.0
+            lambda_identity: 0
+            proportion_ssim: 0
     
     metrics:
         discriminator_evolution: True
@@ -61,7 +64,7 @@ val:
     sliding_window:
         window_size: ${train.dataset.patch_size}
     metrics:
-        cycle_metrics: False
+        cycle_metrics: True
         save_to_csv: True
 
 test:
