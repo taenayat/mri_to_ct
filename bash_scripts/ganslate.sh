@@ -3,8 +3,7 @@
 # Job name
 #SBATCH --job-name cyclegan
 #SBATCH --output /mnt/homeGPU/tenayat/slurm_archive/slurm-%j.out
-#SBATCH --partition dios
-#SBACTH --nodelist hera
+#SBATCH --partition dgx
 
 #SBACTH --mem 64G
 

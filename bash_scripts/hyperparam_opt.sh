@@ -26,6 +26,6 @@ cd /mnt/homeGPU/tenayat
 
 METRIC="mae_clean_mask"
 
-python python_scripts/optimizer_patchsize.py
+python python_scripts/optimizer_lambda_pix2pix.py
 
 printf "\n\nFINISHED\n\n"
