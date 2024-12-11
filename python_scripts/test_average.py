@@ -54,7 +54,7 @@ except (pd.errors.EmptyDataError, FileNotFoundError):
     print("CSV file is empty. Creating an empty DataFrame.")
     meta_test_df = pd.DataFrame()
 try:
-    meta_test_df_human_readable = pd.read_csv(OUTPUT_PATH)
+    meta_test_df_human_readable = pd.read_csv(OUTPUT_PATH_HR)
 except (pd.errors.EmptyDataError, FileNotFoundError):
     print("CSV file is empty. Creating an empty DataFrame.")
     meta_test_df_human_readable = pd.DataFrame()
