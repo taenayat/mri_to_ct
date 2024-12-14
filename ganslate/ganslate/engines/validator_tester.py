@@ -4,6 +4,9 @@ from ganslate.utils import environment
 from ganslate.utils.builders import build_gan, build_loader
 from ganslate.utils.trackers.validation_testing import ValTestTracker
 
+import matplotlib.pyplot as plt
+import torch
+
 
 class BaseValTestEngine(BaseEngineWithInference):
 
@@ -20,6 +23,25 @@ class BaseValTestEngine(BaseEngineWithInference):
         self.tracker = ValTestTracker(self.conf)
         self.metricizer = ValTestMetrics(self.conf)
         self.visuals = {}
+
+
+    ###################
+    def create_heatmap(self, real_B, fake_B):
+        # """Create a heatmap of the difference between fake_B and real_B using 'bwr' colormap."""
+        # difference = (fake_B - real_B).cpu().numpy()
+        # heatmap = plt.get_cmap('bwr')(difference)[:, :, :3]  # Use 'bwr' colormap and ignore alpha channel
+        # # heatmap = torch.tensor(heatmap).permute(2, 0, 1)  # Convert to tensor and permute to CxHxW
+        # heatmap = torch.tensor(heatmap)  # Convert to tensor and permute to CxHxW
+        # return heatmap
+        fill_image = torch.zeros_like(real_B, device=real_B.device)
+        comp_image = torch.cat((fake_B, fill_image, real_B), dim=1)
+        # print('real', real_B.shape)
+        # print('composition', comp_image.shape)
+        return comp_image
+    ####################
+
+
+
 
     def run(self, current_idx=None):
         self.logger.info(f'{"Validation" if self.conf.mode == "val" else "Testing"} started.')
@@ -118,6 +140,16 @@ class BaseValTestEngine(BaseEngineWithInference):
 
         metrics.update(mask_metrics)
         metrics.update(cycle_metrics)
+
+
+
+        #################
+        # print(self.visuals.keys())
+        # print({k:v.shape for k,v in self.visuals.items()})
+        if "real_B" in self.visuals and "fake_B" in self.visuals:
+            heatmap = self.create_heatmap(self.visuals["real_B"], self.visuals["fake_B"])
+            self.visuals["clean_mask"] = heatmap
+        # print({k:v.shape for k,v in self.visuals.items()})
         return metrics
 
 
