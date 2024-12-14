@@ -26,18 +26,22 @@ class BaseValTestEngine(BaseEngineWithInference):
 
 
     ###################
+    # def create_heatmap(self, real_B, fake_B):
+    #     fill_image = torch.zeros_like(real_B, device=real_B.device)
+    #     comp_image = torch.cat((fake_B, fill_image, real_B), dim=1)
+    #     return comp_image
     def create_heatmap(self, real_B, fake_B):
-        # """Create a heatmap of the difference between fake_B and real_B using 'bwr' colormap."""
-        # difference = (fake_B - real_B).cpu().numpy()
-        # heatmap = plt.get_cmap('bwr')(difference)[:, :, :3]  # Use 'bwr' colormap and ignore alpha channel
-        # # heatmap = torch.tensor(heatmap).permute(2, 0, 1)  # Convert to tensor and permute to CxHxW
-        # heatmap = torch.tensor(heatmap)  # Convert to tensor and permute to CxHxW
-        # return heatmap
-        fill_image = torch.zeros_like(real_B, device=real_B.device)
-        comp_image = torch.cat((fake_B, fill_image, real_B), dim=1)
-        # print('real', real_B.shape)
-        # print('composition', comp_image.shape)
-        return comp_image
+        difference = (fake_B - real_B) / 2.0
+        # difference = torch.clamp(difference, -1.0, 1.0)
+        # print(torch.min(real_B), torch.max(real_B), torch.min(difference), torch.max(difference))
+
+        # template_image = torch.zeros_like(real_B, device=real_B.device)
+        red = torch.clamp(difference, 0, 1)
+        blue = torch.clamp(-difference, 0, 1)
+        green = 1.0 - torch.abs(difference)
+        composition_image = torch.cat((red,green,blue), dim=1)
+        print(composition_image.shape)
+        return composition_image
     ####################
 
 
