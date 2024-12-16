@@ -172,6 +172,269 @@ to:
 "
 
 
+10.
+path/engines/validator_tester.py line 28 (create function)
+from: ""
+to:
+"
+    ###################
+    # def create_heatmap(self, real_B, fake_B):
+    #     fill_image = torch.zeros_like(real_B, device=real_B.device)
+    #     comp_image = torch.cat((fake_B, fill_image, real_B), dim=1)
+    #     return comp_image
+    def create_heatmap(self, real_B, fake_B):
+        difference = (fake_B - real_B) / 2.0
+        red = torch.clamp(difference, 0, 1)
+        blue = torch.clamp(-difference, 0, 1)
+        green = 1.0 - torch.abs(difference)
+        composition_image = torch.cat((red,green,blue), dim=1)
+        return composition_image
+    ####################
+"
+
+11.
+path/engines/validator_tester.py - end of _calculate_metrics function
+from: ""
+to:
+"
+        if "real_B" in self.visuals and "fake_B" in self.visuals:
+            heatmap = self.create_heatmap(self.visuals["real_B"], self.visuals["fake_B"])
+            self.visuals["clean_mask"] = heatmap
+"
 
 
+12.
+path/engines/validator_tester.py line 28 (update create_heatmap function)
+from:
+"
+    ###################
+    def create_heatmap(self, real_B, fake_B):
+        difference = (fake_B - real_B) / 2.0
+        red = torch.clamp(difference, 0, 1)
+        blue = torch.clamp(-difference, 0, 1)
+        green = 1.0 - torch.abs(difference)
+        composition_image = torch.cat((red,green,blue), dim=1)
+        return composition_image
+    ####################
+"
+to:
+"
+def create_heatmap(self, real_B, fake_B):
+        difference = (fake_B - real_B) / 2.0
 
+        # Create masks
+        mask_red = difference > 0
+        mask_blue = difference < 0
+        mask_white = difference == 0
+
+        # Initialize color channels
+        red = torch.zeros_like(difference)
+        green = torch.zeros_like(difference)
+        blue = torch.zeros_like(difference)
+
+        # Apply colors
+        red[mask_red] = 1.0      # Red where fake_B > real_B
+        blue[mask_blue] = 1.0    # Blue where fake_B < real_B
+        red[mask_white] = 1.0    # White where fake_B == real_B
+        green[mask_white] = 1.0
+        blue[mask_white] = 1.0
+
+        # Stack channels
+        composition_image = torch.cat((red, green, blue), dim=1)
+
+        return composition_image
+"
+
+
+13.
+path/data/utils/ops.py - (create dynamic_pad_collate function)
+from:""
+to:
+"
+
+def dynamic_pad_collate(batch):
+    """
+    Pads 4D tensors in the batch to the size of the largest tensor in each spatial dimension.
+    Uses the custom `pad` function which takes an image tensor and the desired shape.
+    Handles dictionaries with keys 'A', 'B', and optionally 'masks' and 'metadata'.
+    Assumes tensors have shape [C, D, H, W].
+    """
+    # Initialize lists for each key
+    A_batch = [item['A'] for item in batch]
+
+    # Determine max dimensions for 'A'
+    max_depth = max(item.shape[1] for item in A_batch)
+    max_height = max(item.shape[2] for item in A_batch)
+    max_width = max(item.shape[3] for item in A_batch)
+    desired_shape = (max_depth, max_height, max_width)
+
+    padded_A = []
+    padded_B = []
+    masks = []
+    metadata = []
+
+    for item in batch:
+        # if 'masks' in item:
+        #     print('before',item['A'].shape, item['B'].shape, item['masks']['clean_mask'].shape)
+        # else:
+        #     print('before',item['A'].shape, item['B'].shape)
+
+        # Pad 'A'
+        padded_A_item = pad(item['A'].squeeze(0), desired_shape)
+        padded_A.append(padded_A_item.unsqueeze(0))
+
+        # Pad 'B'
+        padded_B_item = pad(item['B'].squeeze(0), desired_shape)
+        padded_B.append(padded_B_item.unsqueeze(0))
+
+        # Pad 'masks' if present
+        # if 'masks' in item:
+        #     padded_mask = pad(item['masks']['clean_mask'], desired_shape)
+        #     masks.append(padded_mask.unsqueeze(0))
+
+        if 'masks' in item:
+            mask_batch = {}
+            for key, mask in item['masks'].items():
+                padded_mask = pad(mask.squeeze(0), desired_shape)
+                mask_batch[key] = padded_mask.unsqueeze(0)
+            masks.append(mask_batch)
+        # if 'masks' in item and item['masks'] is not None:
+        #     mask_batch = {}
+        #     for key, mask in item['masks'].items():
+        #         padded_mask = pad(mask.squeeze(0), desired_shape)
+        #         mask_batch[key] = padded_mask.unsqueeze(0)
+        #     masks.append(mask_batch)
+        # else:
+        #     masks.append({})
+
+        # Collect metadata if present
+        if 'metadata' in item:
+            metadata.append(item['metadata'])
+        # if 'metadata' in item and item['metadata'] is not None:
+        #     metadata.append(item['metadata'])
+        # else:
+        #     metadata.append({})
+
+    # for a,b in zip(padded_A,padded_B):
+    #     print('after',a.shape, b.shape)
+
+    batch_dict = {
+        'A': torch.stack(padded_A),
+        'B': torch.stack(padded_B)
+    }
+
+    # if masks:
+    #     batch_dict['masks'] = masks
+    # if metadata:
+    #     batch_dict['metadata'] = metadata
+    if masks:
+        collated_masks = {}
+        for mask_batch in masks:
+            for key, mask in mask_batch.items():
+                if key not in collated_masks:
+                    collated_masks[key] = []
+                collated_masks[key].append(mask)
+        # Stack masks for each key
+        for key in collated_masks:
+            collated_masks[key] = torch.stack(collated_masks[key])
+        batch_dict['masks'] = collated_masks
+
+    # Collate 'metadata' into a dictionary of lists
+    if metadata:
+        collated_metadata = {}
+        for meta in metadata:
+            for key, value in meta.items():
+                if key not in collated_metadata:
+                    collated_metadata[key] = []
+                collated_metadata[key].append(value)
+        batch_dict['metadata'] = collated_metadata
+
+    return batch_dict
+"
+
+14.
+path/utils/builders.py - line 73-78 (update return)
+from:
+"
+    return DataLoader(dataset,
+                      sampler=sampler,
+                      batch_size=conf[conf.mode].batch_size,
+                      num_workers=conf[conf.mode].dataset.num_workers,
+                      pin_memory=conf[conf.mode].dataset.pin_memory)
+"
+to:
+"
+    return DataLoader(dataset,
+                      sampler=sampler,
+                      batch_size=conf[conf.mode].batch_size,
+                      num_workers=conf[conf.mode].dataset.num_workers,
+                      pin_memory=conf[conf.mode].dataset.pin_memory,
+                      collate_fn=dynamic_pad_collate) # added line
+"
+
+15.
+path/data/utils/ops.py - (update dynamic_pad_collate function)
+to:
+"
+def dynamic_pad_collate(batch):
+    # Initialize lists for each key
+    A_batch = [item['A'] for item in batch]
+
+    # Determine max dimensions for 'A'
+    max_depth = max(item.shape[1] for item in A_batch)
+    max_height = max(item.shape[2] for item in A_batch)
+    max_width = max(item.shape[3] for item in A_batch)
+    desired_shape = (max_depth, max_height, max_width)
+
+    padded_A = []
+    padded_B = []
+    masks = []
+    metadata = []
+
+    for item in batch:
+        padded_A_item = pad(item['A'].squeeze(0), desired_shape)
+        padded_A.append(padded_A_item.unsqueeze(0))
+
+        if 'B' in item:
+            padded_B_item = pad(item['B'].squeeze(0), desired_shape)
+            padded_B.append(padded_B_item.unsqueeze(0))
+
+        if 'masks' in item:
+            mask_batch = {}
+            for key, mask in item['masks'].items():
+                padded_mask = pad(mask.squeeze(0), desired_shape)
+                mask_batch[key] = padded_mask.unsqueeze(0)
+            masks.append(mask_batch)
+
+        if 'metadata' in item:
+            metadata.append(item['metadata'])
+
+    batch_dict = {
+        'A': torch.stack(padded_A)
+        # 'B': torch.stack(padded_B)
+    }
+    if padded_B:
+        batch_dict['B'] = torch.stack(padded_B)
+
+    if masks:
+        collated_masks = {}
+        for mask_batch in masks:
+            for key, mask in mask_batch.items():
+                if key not in collated_masks:
+                    collated_masks[key] = []
+                collated_masks[key].append(mask)
+        for key in collated_masks:
+            collated_masks[key] = torch.stack(collated_masks[key])
+        batch_dict['masks'] = collated_masks
+
+    if metadata:
+        collated_metadata = {}
+        for meta in metadata:
+            for key, value in meta.items():
+                if key not in collated_metadata:
+                    collated_metadata[key] = []
+                collated_metadata[key].append(value)
+        batch_dict['metadata'] = collated_metadata
+
+    return batch_dict
+"
