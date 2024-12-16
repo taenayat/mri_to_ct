@@ -16,6 +16,7 @@ from ganslate import configs
 
 from torchvision.transforms import v2 
 from monai import transforms
+from ganslate.data.utils.ops import pad
 
 @dataclass
 class SynthRAD2023TrainDatasetConfig(configs.base.BaseDatasetConfig):
@@ -86,6 +87,7 @@ class SynthRAD2023TrainDataset(Dataset):
         MRI_tensor = sitk_utils.get_tensor(MRI_image)
         # MRI_min_value, MRI_max_value = MRI_tensor.min(), MRI_tensor.max()
         MRI_tensor = z_score_squeeze(MRI_tensor)
+        CT_tensor = min_max_normalize(CT_tensor, -1024, 3000)
 
         if self.transformations:
             CT_tensor = CT_tensor.unsqueeze(0)
@@ -97,14 +99,24 @@ class SynthRAD2023TrainDataset(Dataset):
             CT_tensor = CT_tensor.squeeze(0)
             MRI_tensor = MRI_tensor.squeeze(0)
 
+        # padding to full size
+        # FULL_SIZE = (288,288,288)
+        # CT_tensor = pad(CT_tensor, FULL_SIZE)
+        # MRI_tensor = pad(MRI_tensor, FULL_SIZE)
+
         CT_patch, MRI_patch = self.patch_sampler.get_patch_pair(CT_tensor, MRI_tensor)
-        CT_patch = min_max_normalize(CT_patch, -1024, 3000)
+        # CT_patch = min_max_normalize(CT_patch, -1024, 3000)
 
         # print('train shape:', MRI_patch.shape, CT_patch.shape)
 
         CT_patch = CT_patch.unsqueeze(0)
         MRI_patch = MRI_patch.unsqueeze(0)
+        # CT_patch = CT_tensor.unsqueeze(0)
+        # MRI_patch = MRI_tensor.unsqueeze(0)
 
+        # resize = transforms.Compose([transforms.Resize(spatial_size=(112,112,112))])
+        # CT_patch = resize(CT_patch)
+        # MRI_patch = resize(MRI_patch)
         # #Save patch for debugging 
         
         # CT_patch = CT_patch.squeeze(0)
