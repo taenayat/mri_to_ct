@@ -30,17 +30,36 @@ class BaseValTestEngine(BaseEngineWithInference):
     #     fill_image = torch.zeros_like(real_B, device=real_B.device)
     #     comp_image = torch.cat((fake_B, fill_image, real_B), dim=1)
     #     return comp_image
+    # def create_heatmap(self, real_B, fake_B):
+    #     difference = (fake_B - real_B) / 2.0
+    #     red = torch.clamp(difference, 0, 1)
+    #     blue = torch.clamp(-difference, 0, 1)
+    #     green = 1.0 - torch.abs(difference)
+    #     composition_image = torch.cat((red,green,blue), dim=1)
+    #     return composition_image
     def create_heatmap(self, real_B, fake_B):
         difference = (fake_B - real_B) / 2.0
-        # difference = torch.clamp(difference, -1.0, 1.0)
-        # print(torch.min(real_B), torch.max(real_B), torch.min(difference), torch.max(difference))
 
-        # template_image = torch.zeros_like(real_B, device=real_B.device)
-        red = torch.clamp(difference, 0, 1)
-        blue = torch.clamp(-difference, 0, 1)
-        green = 1.0 - torch.abs(difference)
-        composition_image = torch.cat((red,green,blue), dim=1)
-        print(composition_image.shape)
+        # Create masks
+        mask_red = difference > 0
+        mask_blue = difference < 0
+        mask_white = difference == 0
+
+        # Initialize color channels
+        red = torch.zeros_like(difference)
+        green = torch.zeros_like(difference)
+        blue = torch.zeros_like(difference)
+
+        # Apply colors
+        red[mask_red] = 1.0      # Red where fake_B > real_B
+        blue[mask_blue] = 1.0    # Blue where fake_B < real_B
+        red[mask_white] = 1.0    # White where fake_B == real_B
+        green[mask_white] = 1.0
+        blue[mask_white] = 1.0
+
+        # Stack channels
+        composition_image = torch.cat((red, green, blue), dim=1)
+
         return composition_image
     ####################
 
