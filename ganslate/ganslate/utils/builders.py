@@ -12,6 +12,7 @@ from ganslate.nn.utils import init_net
 from ganslate.utils import communication
 from ganslate.utils.io import import_attr
 
+from ganslate.data.utils.ops import dynamic_pad_collate
 
 def build_conf(omegaconf_args):
     cli = omegaconf.OmegaConf.from_dotlist(omegaconf_args)
@@ -73,7 +74,8 @@ def build_loader(conf):
                       sampler=sampler,
                       batch_size=conf[conf.mode].batch_size,
                       num_workers=conf[conf.mode].dataset.num_workers,
-                      pin_memory=conf[conf.mode].dataset.pin_memory)
+                      pin_memory=conf[conf.mode].dataset.pin_memory,
+                      collate_fn=dynamic_pad_collate) # added line
 
 
 def build_gan(conf):
