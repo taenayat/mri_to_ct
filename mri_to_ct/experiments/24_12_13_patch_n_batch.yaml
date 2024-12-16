@@ -1,10 +1,10 @@
 project: "./mri_to_ct/"
 train:
-    output_dir: "/mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp"
+    output_dir: "/mnt/homeGPU/tenayat/mri_to_ct/24_12_13_patch_n_batch/"
     cuda: True
-    n_iters:  24000
+    n_iters:  6000
     n_iters_decay: 0
-    batch_size:  2
+    batch_size:  1
     mixed_precision: False
 
     logging:
@@ -12,9 +12,7 @@ train:
         tensorboard: True
     
     checkpointing:
-        freq: 1200
-        # load_optimizers: True
-        # load_iter: 36300
+        freq: ${train.n_iters}
 
     dataset: 
         _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
@@ -45,44 +43,33 @@ train:
         optimizer:
             lr_D: 0.00002
             lr_G: 0.0005
-            lambda_pix2pix: 60.0
+            lambda_pix2pix: 30.0
     
     metrics:
         discriminator_evolution: True
 
 
 val:
-    freq: ${train.checkpointing.freq}
+    freq: 100000
     dataset: 
         _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
         root: "/mnt/homeGPU/tenayat/data/VAL"
         num_workers: 0
         pin_memory: True
     sliding_window:
-        overlap: 0.5
         window_size: ${train.dataset.patch_size}
+        overlap: 0.25
     metrics:
         cycle_metrics: False
         save_to_csv: True
 
 test:
     checkpointing:
-        load_iter: 0
+        load_iter: ${train.n_iters}
     dataset: 
         _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
         root: "/mnt/homeGPU/tenayat/data/TEST"
         num_workers: 0
     sliding_window:
-        overlap: ${val.sliding_window.overlap}
         window_size: ${train.dataset.patch_size}
-
-
-# infer:
-#     checkpointing:
-#         load_iter: 0
-#     dataset:
-#         _target_: project.datasets.infer_dataset.SynthRAD2023InferDataset
-#         root: "/mnt/homeGPU/tenayat/data/TEST"
-#         num_workers: 0
-#     sliding_window:
-#         window_size: ${train.dataset.patch_size}
+        overlap: ${val.sliding_window.overlap}

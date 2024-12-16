@@ -1,15 +1,13 @@
 project: ./mri_to_ct/
 test:
   checkpointing:
-    load_iter: 20400
+    load_iter: 21600
   dataset:
     _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
     num_workers: 0
     root: /mnt/homeGPU/tenayat/data/TEST
-  sliding_window:
-    window_size: ${train.dataset.patch_size}
 train:
-  batch_size: 16
+  batch_size: 1
   checkpointing:
     freq: 1200
   cuda: true
@@ -17,10 +15,6 @@ train:
     _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
     augmentation: false
     num_workers: 0
-    patch_size:
-    - 16
-    - 64
-    - 64
     pin_memory: true
     root: /mnt/homeGPU/tenayat/data/TRAIN
   gan:
@@ -58,7 +52,7 @@ train:
   mixed_precision: false
   n_iters: 24000
   n_iters_decay: 0
-  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/24_12_10_batchsize2
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/24_12_12_padding
 val:
   dataset:
     _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
@@ -69,7 +63,3 @@ val:
   metrics:
     cycle_metrics: false
     save_to_csv: true
-  sliding_window:
-    batch_size: 1
-    overlap: 0.5
-    window_size: ${train.dataset.patch_size}

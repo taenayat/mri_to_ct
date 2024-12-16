@@ -19,7 +19,8 @@ class TensorboardTracker:
                  visuals = None,
                  learning_rates=None,
                  losses=None,
-                 metrics=None):
+                 metrics=None,
+                 gpu_usage=False):
         # Learning rates
         if learning_rates is not None:
             for name, learning_rate in learning_rates.items():
@@ -36,11 +37,11 @@ class TensorboardTracker:
                 self.writer.add_scalar(f"Metrics ({mode})/{name}", metric, iter_idx)
 
         # GPU Usage
-        if is_available():
+        if gpu_usage and is_available():
             gpu_memory_reserved = memory_reserved()
             gpu_memory_allocated = memory_allocated()
-            self.writer.add_scalar("GPU_RAM/Reserved", gpu_memory_reserved, iter_idx)
-            self.writer.add_scalar("GPU_RAM/Allocated", gpu_memory_allocated, iter_idx)
+            self.writer.add_scalar("GPU_RAM/Reserved", gpu_memory_reserved / 1024**3, iter_idx)
+            self.writer.add_scalar("GPU_RAM/Allocated", gpu_memory_allocated / 1024**3, iter_idx)
 
         # Normal images
         if visuals is not None:

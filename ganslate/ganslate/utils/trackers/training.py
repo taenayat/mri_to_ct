@@ -85,7 +85,8 @@ class TrainingTracker(BaseTracker):
                                       mode="train",
                                       learning_rates=learning_rates,
                                       losses=losses,
-                                      metrics=metrics)
+                                      metrics=metrics,
+                                      gpu_usage=True)
 
     def save_learning_curves(self,losses):
         import pandas as pd

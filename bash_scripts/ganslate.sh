@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Job name
-#SBATCH --job-name cyclegan
+#SBATCH --job-name pix2pix
 #SBATCH --output /mnt/homeGPU/tenayat/slurm_archive/slurm-%j.out
 #SBATCH --partition dgx
 

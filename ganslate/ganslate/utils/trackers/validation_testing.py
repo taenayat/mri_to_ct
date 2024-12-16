@@ -138,7 +138,6 @@ class ValTestTracker(BaseTracker):
             self.metrics = []
             self.visuals = []
 
-            
         metrics = get_metrics()
         log_message()
         log_visuals()
