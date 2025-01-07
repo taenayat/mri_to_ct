@@ -41,6 +41,7 @@ train:
       - false
       - true
       - true
+      first_layer_channels: 32
       in_out_channels:
         AB:
         - 1
@@ -63,7 +64,7 @@ train:
   mixed_precision: false
   n_iters: 24000
   n_iters_decay: 0
-  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/24_12_16_attention
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/24_12_18_vnet/first_layer
 val:
   dataset:
     _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset

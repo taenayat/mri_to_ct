@@ -1,7 +1,7 @@
 project: ./mri_to_ct/
 test:
   checkpointing:
-    load_iter: 21600
+    load_iter: 22800
   dataset:
     _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
     num_workers: 0
@@ -34,11 +34,13 @@ train:
     generator:
       _target_: ganslate.nn.generators.SelfAttentionVnet3D
       down_blocks:
-      - 2
-      - 2
-      - 3
+      - 1
+      - 1
+      - 1
+      - 1
       enable_attention_block:
       - false
+      - true
       - true
       - true
       in_out_channels:
@@ -46,9 +48,10 @@ train:
         - 1
         - 1
       up_blocks:
-      - 3
-      - 3
-      - 3
+      - 1
+      - 1
+      - 1
+      - 1
       use_inverse: false
       use_memory_saving: false
     optimizer:
@@ -63,7 +66,7 @@ train:
   mixed_precision: false
   n_iters: 24000
   n_iters_decay: 0
-  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/24_12_16_attention
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/24_12_18_vnet/1_1_1_1
 val:
   dataset:
     _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset

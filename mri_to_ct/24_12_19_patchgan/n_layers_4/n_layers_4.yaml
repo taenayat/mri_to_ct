@@ -1,6 +1,6 @@
 project: "./mri_to_ct/"
 train:
-    output_dir: "/mnt/homeGPU/tenayat/mri_to_ct/cyclegan_temp"
+    output_dir: "/mnt/homeGPU/tenayat/mri_to_ct/24_12_19_patchgan/n_layers_4"
     cuda: True
     n_iters:  24000
     n_iters_decay: 0
@@ -13,8 +13,6 @@ train:
     
     checkpointing:
         freq: 1200
-        # load_optimizers: True
-        # load_iter: 36300
 
     dataset: 
         _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
@@ -29,18 +27,17 @@ train:
         _target_: ganslate.nn.gans.paired.Pix2PixConditionalGAN
         generator:  
             _target_: ganslate.nn.generators.SelfAttentionVnet3D
-            enable_attention_block: [False, True, True]
+            enable_attention_block: [False,True,True]
             use_memory_saving: False
             use_inverse: False
             in_out_channels:
                 AB: [1, 1]
             down_blocks: [2, 2, 3]
             up_blocks: [3, 3, 3]
-            first_layer_channels: 32
 
         discriminator:  
             _target_: ganslate.nn.discriminators.SelfAttentionPatchGAN3D
-            n_layers: 2
+            n_layers: 4
             in_channels: 
                 B: 2
 
@@ -77,14 +74,3 @@ test:
     sliding_window:
         overlap: ${val.sliding_window.overlap}
         window_size: ${train.dataset.patch_size}
-
-
-# infer:
-#     checkpointing:
-#         load_iter: 0
-#     dataset:
-#         _target_: project.datasets.infer_dataset.SynthRAD2023InferDataset
-#         root: "/mnt/homeGPU/tenayat/data/TEST"
-#         num_workers: 0
-#     sliding_window:
-#         window_size: ${train.dataset.patch_size}

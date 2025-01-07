@@ -1,7 +1,7 @@
 project: ./mri_to_ct/
 test:
   checkpointing:
-    load_iter: 21600
+    load_iter: 24000
   dataset:
     _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
     num_workers: 0
@@ -36,9 +36,11 @@ train:
       down_blocks:
       - 2
       - 2
-      - 3
+      - 2
+      - 2
       enable_attention_block:
       - false
+      - true
       - true
       - true
       in_out_channels:
@@ -46,9 +48,10 @@ train:
         - 1
         - 1
       up_blocks:
-      - 3
-      - 3
-      - 3
+      - 2
+      - 2
+      - 2
+      - 2
       use_inverse: false
       use_memory_saving: false
     optimizer:
@@ -63,7 +66,7 @@ train:
   mixed_precision: false
   n_iters: 24000
   n_iters_decay: 0
-  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/24_12_16_attention
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/24_12_18_vnet/2_2_2_2
 val:
   dataset:
     _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
