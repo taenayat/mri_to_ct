@@ -56,26 +56,9 @@ class SynthRAD2023ValTestDataset(Dataset):
         CT_tensor = min_max_normalize(CT_tensor, self.CT_min_value, self.CT_max_value)
         MRI_tensor = z_score_squeeze(MRI_tensor)
 
-        # FULL_SIZE = (288,288,288)
-        # print('before pad', MRI_tensor.shape, CT_tensor.shape)
-        # CT_tensor = pad(CT_tensor, (262,284,280))
-        # CT_tensor = pad(CT_tensor, FULL_SIZE)
-        # MRI_tensor = pad(MRI_tensor, (262,284,280))
-        # MRI_tensor = pad(MRI_tensor, FULL_SIZE)
-        # mask_tensor = pad(mask_tensor, (262,284,280))
-        # mask_tensor = pad(mask_tensor, FULL_SIZE)
-        # print('after pad', MRI_tensor.shape, CT_tensor.shape)
-
-
         CT_tensor = CT_tensor.unsqueeze(0)
         MRI_tensor = MRI_tensor.unsqueeze(0)
         mask_tensor = mask_tensor.unsqueeze(0)
-
-        # resize = transforms.Compose([transforms.Resize(spatial_size=(112,112,112))])
-        # CT_tensor = resize(CT_tensor)
-        # MRI_tensor = resize(MRI_tensor)
-        # mask_tensor = resize(mask_tensor)
-        # print(CT_tensor.shape)
 
         mask_dict={"clean_mask": mask_tensor}
         return {'A': MRI_tensor, 'B': CT_tensor, "masks": mask_dict,"metadata": {"mri_path": str(mri_sample)}}

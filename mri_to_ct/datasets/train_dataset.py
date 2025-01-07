@@ -99,47 +99,10 @@ class SynthRAD2023TrainDataset(Dataset):
             CT_tensor = CT_tensor.squeeze(0)
             MRI_tensor = MRI_tensor.squeeze(0)
 
-        # padding to full size
-        # FULL_SIZE = (288,288,288)
-        # CT_tensor = pad(CT_tensor, FULL_SIZE)
-        # MRI_tensor = pad(MRI_tensor, FULL_SIZE)
-
         CT_patch, MRI_patch = self.patch_sampler.get_patch_pair(CT_tensor, MRI_tensor)
-        # CT_patch = min_max_normalize(CT_patch, -1024, 3000)
-
-        # print('train shape:', MRI_patch.shape, CT_patch.shape)
 
         CT_patch = CT_patch.unsqueeze(0)
         MRI_patch = MRI_patch.unsqueeze(0)
-        # CT_patch = CT_tensor.unsqueeze(0)
-        # MRI_patch = MRI_tensor.unsqueeze(0)
-
-        # resize = transforms.Compose([transforms.Resize(spatial_size=(112,112,112))])
-        # CT_patch = resize(CT_patch)
-        # MRI_patch = resize(MRI_patch)
-        # #Save patch for debugging 
-        
-        # CT_patch = CT_patch.squeeze(0)
-        # MRI_patch = MRI_patch.squeeze(0)
-        
-        # ct_space = CT_image.GetSpacing()
-        # ct_direction = CT_image.GetDirection()
-        # ct_origin = CT_image.GetOrigin()
-
-        # mri_space = MRI_image.GetSpacing()
-        # mri_direction = MRI_image.GetDirection()
-        # mri_origin = MRI_image.GetOrigin()
-
-        # MRI_patch_image = sitk_utils.tensor_to_sitk_image(MRI_patch,origin=ct_origin,spacing=ct_space,direction=ct_direction)
-        # CT_patch_image = sitk_utils.tensor_to_sitk_image(CT_patch,origin=mri_origin,spacing=mri_space,direction=mri_direction)
-
-        # print("MRI_patch_image", MRI_patch_image.GetSize())
-
-        # sitk_utils.write(MRI_patch_image, "output_prueba/MRI_patch_{}.nii.gz".format(index))
-        # sitk_utils.write(CT_patch_image, "output_prueba/CT_patch_{}.nii.gz".format(index))
-
-        # CT_patch = CT_patch.unsqueeze(0)
-        # MRI_patch = MRI_patch.unsqueeze(0)
 
         return {'A': MRI_patch, 'B': CT_patch}
 
