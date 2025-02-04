@@ -90,13 +90,3 @@ class SynthRAD2023InferDataset(Dataset):
         os.makedirs(save_dir, exist_ok=True)
         sitk_utils.write(image, save_dir / filename)
 
-        # print('save', metadata)
-
-        # array = tensor.cpu().numpy()
-        # array = min_max_denormalize(array, -1024, 3000)
-        # sitk_image = sitk.GetImageFromArray(array)
-        # sitk_image.SetOrigin(metadata["origin"])
-        # sitk_image.SetSpacing(metadata["spacing"])
-        # sitk_image.SetDirection(metadata["direction"])
-        # os.makedirs(save_dir, exist_ok=True)
-        # sitk_utils.write(sitk_image, save_dir / filename)
