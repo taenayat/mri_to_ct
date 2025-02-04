@@ -6,7 +6,7 @@ from ganslate.utils import sitk_utils
 import os
 import SimpleITK as sitk
 
-from ganslate.data.utils.normalization import min_max_normalize, min_max_denormalize
+from ganslate.data.utils.normalization import z_score_squeeze, min_max_denormalize
 
 from typing import Tuple
 from dataclasses import dataclass
@@ -42,7 +42,8 @@ class SynthRAD2023InferDataset(Dataset):
 
         MRI_tensor = sitk_utils.get_tensor(MRI_image)
 
-        MRI_tensor = min_max_normalize(MRI_tensor, MRI_tensor.min(), MRI_tensor.max())
+        # MRI_tensor = min_max_normalize(MRI_tensor, MRI_tensor.min(), MRI_tensor.max())
+        MRI_tensor = z_score_squeeze(MRI_tensor)
 
         MRI_tensor = MRI_tensor.unsqueeze(0)
 
@@ -81,10 +82,21 @@ class SynthRAD2023InferDataset(Dataset):
         filename = os.path.basename(metadata["path"])
         filename = filename.split(".")[0]
         filename = filename.split("_")[0]
-        filename += "_SCT.nii.gz"
+        filename += "_sct.nii.gz"
         image = sitk.GetImageFromArray(np_image[0])
         image.SetOrigin(metadata["origin"])
         image.SetSpacing(metadata["spacing"])
         image.SetDirection(metadata["direction"])
         os.makedirs(save_dir, exist_ok=True)
         sitk_utils.write(image, save_dir / filename)
+
+        # print('save', metadata)
+
+        # array = tensor.cpu().numpy()
+        # array = min_max_denormalize(array, -1024, 3000)
+        # sitk_image = sitk.GetImageFromArray(array)
+        # sitk_image.SetOrigin(metadata["origin"])
+        # sitk_image.SetSpacing(metadata["spacing"])
+        # sitk_image.SetDirection(metadata["direction"])
+        # os.makedirs(save_dir, exist_ok=True)
+        # sitk_utils.write(sitk_image, save_dir / filename)
