@@ -10,7 +10,7 @@ test:
     overlap: ${val.sliding_window.overlap}
     window_size: ${train.dataset.patch_size}
 train:
-  batch_size: 2
+  batch_size: 1
   checkpointing:
     freq: 1200
   cuda: true
@@ -78,3 +78,15 @@ val:
   sliding_window:
     overlap: 0.5
     window_size: ${train.dataset.patch_size}
+  
+
+infer:
+    checkpointing:
+        load_iter: 36000
+    dataset:
+        _target_: project.datasets.infer_dataset.SynthRAD2023InferDataset
+        root: "/mnt/homeGPU/tenayat/data/TEST"
+        num_workers: 0
+    sliding_window:
+        overlap: 0.5
+        window_size: ${train.dataset.patch_size}
