@@ -1,0 +1,178 @@
+[2025-02-19 04:27:46][ganslate.utils.environment][INFO] - Configuration:
+project: ./mri_to_ct/
+mode: test
+train:
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/25_02_18_artifact
+  batch_size: 1
+  cuda: true
+  mixed_precision: false
+  opt_level: O1
+  logging:
+    freq: 30
+    multi_modality_split: null
+    tensorboard: true
+    wandb: null
+    image_window: null
+  dataset:
+    _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
+    root: /mnt/homeGPU/tenayat/data/TRAIN
+    num_workers: 0
+    pin_memory: true
+    patch_size:
+    - 32
+    - 160
+    - 160
+    focal_region_proportion: 0.0
+    augmentation: false
+    unpaired: false
+  checkpointing:
+    load_iter: null
+    freq: 1200
+    start_after: 0
+    load_optimizers: true
+  n_iters: 24000
+  n_iters_decay: 0
+  gan:
+    _target_: ganslate.nn.gans.paired.Pix2PixConditionalGAN
+    norm_type: instance
+    weight_init_type: normal
+    weight_init_gain: 0.02
+    optimizer:
+      adversarial_loss_type: lsgan
+      beta1: 0.5
+      beta2: 0.999
+      lr_D: 2.0e-05
+      lr_G: 0.0005
+      lambda_pix2pix: 60.0
+    generator:
+      _target_: ganslate.nn.generators.SelfAttentionVnet3D
+      in_out_channels:
+        AB:
+        - 1
+        - 1
+        BA: ${train.gan.generator.in_out_channels.AB}
+      use_memory_saving: false
+      use_inverse: false
+      first_layer_channels: 32
+      down_blocks:
+      - 2
+      - 2
+      - 3
+      up_blocks:
+      - 3
+      - 3
+      - 3
+      is_separable: false
+      enable_attention_block:
+      - false
+      - true
+      - true
+    discriminator:
+      _target_: ganslate.nn.discriminators.SelfAttentionPatchGAN3D
+      in_channels:
+        B: 2
+        A: ${train.gan.discriminator.in_channels.B}
+      ndf: 64
+      n_layers: 2
+      kernel_size:
+      - 4
+      - 4
+      - 4
+  seed: null
+  metrics:
+    discriminator_evolution: true
+    ssim: false
+val:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/VAL
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.5
+    mode: gaussian
+  multi_dataset: null
+  freq: ${train.checkpointing.freq}
+  start_after: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    cycle_metrics: false
+    save_to_csv: true
+test:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: ${val.sliding_window.overlap}
+    mode: gaussian
+  multi_dataset: null
+  checkpointing:
+    load_iter: 21600
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    compute_over_input: false
+    save_to_csv: true
+infer:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.infer_dataset.SynthRAD2023InferDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  is_deployment: false
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: ${val.sliding_window.overlap}
+    mode: gaussian
+  checkpointing:
+    load_iter: 0
+
+[2025-02-19 04:27:46][ganslate.utils.environment][INFO] - Saving checkpoints, logs and config to: /mnt/homeGPU/tenayat/mri_to_ct/25_02_18_artifact
+[2025-02-19 04:27:46][ganslate.utils.environment][INFO] - Python version: 3.9.20 (main, Oct  3 2024, 07:27:41) 
+[GCC 11.2.0]
+[2025-02-19 04:27:46][ganslate.utils.environment][INFO] - PyTorch version: 2.5.1
+[2025-02-19 04:27:46][ganslate.utils.environment][INFO] - CUDA 11.8 - cuDNN 90100
+[2025-02-19 04:27:46][ganslate.utils.environment][INFO] - Global rank: 0
+[2025-02-19 04:27:46][ganslate.utils.environment][INFO] - Local rank: 0
+[2025-02-19 04:27:46][ganslate.nn.generators.vnet.selfattention_vnet3d][INFO] - Invertible layers are disabled.
+[2025-02-19 04:27:47][ganslate.nn.gans.base][INFO] - Loaded the checkpoint from `/mnt/homeGPU/tenayat/mri_to_ct/25_02_18_artifact/checkpoints/21600.pth`
+[2025-02-19 04:27:47][ganslate.engines.validator_tester][INFO] - Testing started.
+[2025-02-19 04:49:12][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Test) --------------------
+ssim: 0.960 mse: 8316.840 nmse: 0.174 psnr: 29.363 mae: 14.922 ssim_clean_mask: 0.961 mse_clean_mask: 17879.373 nmse_clean_mask: 0.169 psnr_clean_mask: 29.420 mae_clean_mask: 32.722 
