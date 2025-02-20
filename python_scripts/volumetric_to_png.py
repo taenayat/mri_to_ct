@@ -17,7 +17,7 @@ def compare_image(image_a, image_a_filename, image_b, image_b_filename, output_c
     filename_b = os.path.basename(image_b_filename).split(".")[0]
 
     if output_compare is None:
-        output_dir = os.path.dirname(image_a_filename)
+        output_dir = os.path.dirname(image_b_filename)
     else:
         output_dir = output_compare
         
@@ -210,7 +210,7 @@ if __name__ == "__main__":
             for file in files:
                 if file.endswith(".nii.gz"):
                     process_image(os.path.join(root, file), args.n_partitions, args.seg, args.color_mode, args.clipping_window)
-    
+
     elif args.compare is not None:
         image_a = process_image(args.image, args.n_partitions, args.seg, args.color_mode, args.clipping_window)
         image_b = process_image(args.compare, args.n_partitions, args.seg, args.color_mode, args.clipping_window)
