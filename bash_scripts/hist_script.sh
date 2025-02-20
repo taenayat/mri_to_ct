@@ -7,7 +7,9 @@ tail -f slurm_archive/slurm-5*.out
 
 python compute_metrics.py --gt data/TEST/CT --syn mri_to_ct/cyclegan_unpaired/infer/saved/ --output mri_to_ct/cyclegan_unpaired/output --mask-path data/TEST/MASKS/
 
-python volumetric_to_png.py --folder mri_to_ct/cyclegan_unpaired/output/difference_images/ --color_mode 1 -n 1
+python python_scripts/volumetric_to_png.py --folder mri_to_ct/cyclegan_unpaired/output/difference_images/ --color_mode 1 -n 1
+
+python python_scripts/volumetric_to_png.py -i grand/truth.nii.gz -c compare/image/path.nii.gz -o output/dir -n 5
 
 echo $PWD
 
