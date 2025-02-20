@@ -38,7 +38,9 @@ def pad(volume, target_shape):
 
 def dynamic_pad_collate(batch):
     # Initialize lists for each key
-    A_batch = [item['A'] for item in batch]
+    A = list(batch[0].keys())[0]
+    # A_batch = [item['A'] for item in batch]
+    A_batch = [item[A] for item in batch]
 
     # Determine max dimensions for 'A'
     max_depth = max(item.shape[1] for item in A_batch)
@@ -52,7 +54,8 @@ def dynamic_pad_collate(batch):
     metadata = []
 
     for item in batch:
-        padded_A_item = pad(item['A'].squeeze(0), desired_shape)
+        # padded_A_item = pad(item['A'].squeeze(0), desired_shape)
+        padded_A_item = pad(item[A].squeeze(0), desired_shape)
         padded_A.append(padded_A_item.unsqueeze(0))
 
         if 'B' in item:
@@ -70,7 +73,8 @@ def dynamic_pad_collate(batch):
             metadata.append(item['metadata'])
 
     batch_dict = {
-        'A': torch.stack(padded_A)
+        # 'A': torch.stack(padded_A)
+        A: torch.stack(padded_A)
         # 'B': torch.stack(padded_B)
     }
     if padded_B:
@@ -89,11 +93,24 @@ def dynamic_pad_collate(batch):
 
     if metadata:
         collated_metadata = {}
-        for meta in metadata:
-            for key, value in meta.items():
+        # if len(metadata) != 1:
+        if True:
+            for meta in metadata:
+                for key, value in meta.items():
+                    if key not in collated_metadata:
+                        collated_metadata[key] = []
+                    collated_metadata[key].append(value)
+        else:
+            for key, values in metadata[0].items():
                 if key not in collated_metadata:
                     collated_metadata[key] = []
-                collated_metadata[key].append(value)
+                if key == 'path':
+                    collated_metadata[key].append(values)
+                else:
+                    for value in values:
+                        collated_metadata[key].append(value)
+        print('meta', metadata)
+        print('collated', collated_metadata)
         batch_dict['metadata'] = collated_metadata
 
     return batch_dict

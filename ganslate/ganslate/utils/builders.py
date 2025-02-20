@@ -74,8 +74,8 @@ def build_loader(conf):
                       sampler=sampler,
                       batch_size=conf[conf.mode].batch_size,
                       num_workers=conf[conf.mode].dataset.num_workers,
-                      pin_memory=conf[conf.mode].dataset.pin_memory,
-                      collate_fn=dynamic_pad_collate) # added line
+                      pin_memory=conf[conf.mode].dataset.pin_memory)
+                    #   collate_fn=dynamic_pad_collate) # added line
 
 
 def build_gan(conf):
