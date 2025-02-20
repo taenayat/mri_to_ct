@@ -18,6 +18,8 @@ from torchvision.transforms import v2
 from monai import transforms
 from ganslate.data.utils.ops import pad
 
+import SimpleITK as sitk
+
 @dataclass
 class SynthRAD2023TrainDatasetConfig(configs.base.BaseDatasetConfig):
     # Define other attributes
@@ -83,11 +85,14 @@ class SynthRAD2023TrainDataset(Dataset):
                                         sitk_utils.get_torch_like_size(MRI_image),
                                         self.patch_size))
 
+        CT_image = self.remove_artifacts(CT_image)
+
         CT_tensor = sitk_utils.get_tensor(CT_image)
         MRI_tensor = sitk_utils.get_tensor(MRI_image)
         # MRI_min_value, MRI_max_value = MRI_tensor.min(), MRI_tensor.max()
         MRI_tensor = z_score_squeeze(MRI_tensor)
-        CT_tensor = min_max_normalize(CT_tensor, -1024, 3000)
+        # CT_tensor = min_max_normalize(CT_tensor, -1024, 3000)
+        CT_tensor = min_max_normalize(CT_tensor, 0, 3000)
 
         if self.transformations:
             CT_tensor = CT_tensor.unsqueeze(0)
@@ -108,3 +113,11 @@ class SynthRAD2023TrainDataset(Dataset):
 
     def __len__(self):
         return self.num_datapoints
+    
+    def remove_artifacts(self, image_sitk, threshold=400):
+        binary_mask = sitk.BinaryThreshold(image_sitk, lowerThreshold=threshold, upperThreshold=3000)
+        connected_components = sitk.ConnectedComponent(binary_mask)
+        labeled_components = sitk.RelabelComponent(connected_components, sortByObjectSize=True)
+        skull_mask = sitk.BinaryThreshold(labeled_components, lowerThreshold=1, upperThreshold=1, insideValue=1, outsideValue=0)
+        skull_image = sitk.Mask(image_sitk, skull_mask)
+        return skull_image
