@@ -35,7 +35,7 @@ if __name__ == "__main__":
             for file in files:
                 args_to_parallel.append([os.path.join(root, file), clean])
 
-        pool = multiprocessing.Pool(processes=15)
+        pool = multiprocessing.Pool(processes=7)
         pool.starmap(procces_file, args_to_parallel)
         pool.close()
     else:

@@ -219,6 +219,7 @@ def make_clean_mesh(mesh, meshfile, header = None, clean=False, silent=False):
     
     if clean:
         confilter = vtk.vtkConnectivityFilter()
+        # confilter.SetInputData(threshold)
         confilter.SetInputData(mesh)
         confilter.SetExtractionModeToLargestRegion()
         confilter.Update()
@@ -259,8 +260,22 @@ def make_mesh(imgpath, outname, header = None, clean=False, silent=False):
         matrix[:3,:3] = np.array(sitk_image.GetDirection()).reshape(3,3)
         matrix[:3, 3] = sitk_image.GetOrigin()
 
+    # Added part
+    if clean:
+        image_data = img.GetOutput()
+        threshold = vtk.vtkImageThreshold()
+        threshold.SetInputData(image_data)
+        threshold.ThresholdByUpper(400)
+        threshold.ReplaceInOn()
+        threshold.SetInValue(1)
+        threshold.ReplaceOutOn()
+        threshold.SetOutValue(0)
+        threshold.Update()
+    # --------------
+
     surface = vtk.vtkMarchingCubes()
-    surface.SetInputData(img.GetOutput())
+    surface.SetInputData(threshold.GetOutput())
+    # surface.SetInputData(img.GetOutput())
     surface.ComputeNormalsOn()
     surface.SetValue(0, 1.0)
     surface.Update()
