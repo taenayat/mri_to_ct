@@ -23,7 +23,7 @@ conda activate /mnt/homeGPU/tenayat/cuda11
 
 cd /mnt/homeGPU/tenayat
 
-# python MTT-Net/train.py
+python MTT-Net/train.py
 python MTT-Net/test.py
 
 printf "\n\nFINISHED\n\n"
