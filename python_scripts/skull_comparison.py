@@ -6,8 +6,10 @@ import vtk
 import tqdm
 import pandas as pd
 
-SCT_PATH = '/home/taha/Downloads/Panacea/mri_to_ct/mri_to_ct/24_12_24_final/infer/saved'
-CT_PATH = '/home/taha/Downloads/Panacea/dataset/TEST/CT'
+# SCT_PATH = '/home/taha/Downloads/Panacea/mri_to_ct/mri_to_ct/24_12_24_final/infer/saved'
+# CT_PATH = '/home/taha/Downloads/Panacea/dataset/TEST/CT'
+SCT_PATH = '/mnt/homeGPU/tenayat/mri_to_ct/25_02_26_thresh150/infer/saved'
+CT_PATH = '/mnt/homeGPU/tenayat/data/TEST/CT'
 sct_dir = sorted([file for file in os.listdir(SCT_PATH) if file[-6:]=='nii.gz'], key = lambda x: x)
 ct_dir = sorted(os.listdir(CT_PATH), key = lambda x: x)
 ct_full_dir = [os.path.join(CT_PATH, ct_dir[idx]) for idx in range(len(ct_dir))]
@@ -45,4 +47,5 @@ std_row.index = ["stddev"]
 
 # Append the new rows to the DataFrame
 df = pd.concat([df, average_row, std_row])
-df.to_csv('/home/taha/Downloads/Panacea/mri_to_ct/mri_to_ct/24_12_24_final/infer/comparison/skull_metrics.csv')
+os.makedirs('/mnt/homeGPU/tenayat/mri_to_ct/25_02_26_thresh150/infer/comparison', exist_ok=True)
+df.to_csv('/mnt/homeGPU/tenayat/mri_to_ct/25_02_26_thresh150/infer/comparison/skull_metrics.csv')

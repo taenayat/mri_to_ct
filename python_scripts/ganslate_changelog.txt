@@ -438,3 +438,16 @@ def dynamic_pad_collate(batch):
 
     return batch_dict
 "
+
+16.
+path/data/utils/ops.py - (added remove_artifact function; called in train & valtest dataset classes)
+to:
+"
+def remove_artifacts(image_sitk, threshold=-150):
+    binary_mask = sitk.BinaryThreshold(image_sitk, lowerThreshold=threshold, upperThreshold=3000)
+    connected_components = sitk.ConnectedComponent(binary_mask)
+    labeled_components = sitk.RelabelComponent(connected_components, sortByObjectSize=True)
+    skull_mask = sitk.BinaryThreshold(labeled_components, lowerThreshold=1, upperThreshold=1, insideValue=1, outsideValue=0)
+    skull_image = sitk.Mask(image_sitk, skull_mask)
+    return skull_image
+"
