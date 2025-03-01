@@ -1,0 +1,2848 @@
+[2025-02-27 07:59:03][ganslate.utils.environment][INFO] - Configuration:
+project: ./mri_to_ct/
+mode: train
+train:
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/25_02_26_thresh150
+  batch_size: 2
+  cuda: true
+  mixed_precision: false
+  opt_level: O1
+  logging:
+    freq: 30
+    multi_modality_split: null
+    tensorboard: true
+    wandb: null
+    image_window: null
+  dataset:
+    _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
+    root: /mnt/homeGPU/tenayat/data/TRAIN
+    num_workers: 0
+    pin_memory: true
+    patch_size:
+    - 32
+    - 160
+    - 160
+    focal_region_proportion: 0.0
+    augmentation: false
+    unpaired: false
+  checkpointing:
+    load_iter: null
+    freq: 1200
+    start_after: 0
+    load_optimizers: true
+  n_iters: 24000
+  n_iters_decay: 0
+  gan:
+    _target_: ganslate.nn.gans.paired.Pix2PixConditionalGAN
+    norm_type: instance
+    weight_init_type: normal
+    weight_init_gain: 0.02
+    optimizer:
+      adversarial_loss_type: lsgan
+      beta1: 0.5
+      beta2: 0.999
+      lr_D: 2.0e-05
+      lr_G: 0.0005
+      lambda_pix2pix: 60.0
+    generator:
+      _target_: ganslate.nn.generators.SelfAttentionVnet3D
+      in_out_channels:
+        AB:
+        - 1
+        - 1
+        BA: ${train.gan.generator.in_out_channels.AB}
+      use_memory_saving: false
+      use_inverse: false
+      first_layer_channels: 32
+      down_blocks:
+      - 2
+      - 2
+      - 3
+      up_blocks:
+      - 3
+      - 3
+      - 3
+      is_separable: false
+      enable_attention_block:
+      - false
+      - true
+      - true
+    discriminator:
+      _target_: ganslate.nn.discriminators.SelfAttentionPatchGAN3D
+      in_channels:
+        B: 2
+        A: ${train.gan.discriminator.in_channels.B}
+      ndf: 64
+      n_layers: 2
+      kernel_size:
+      - 4
+      - 4
+      - 4
+  seed: null
+  metrics:
+    discriminator_evolution: true
+    ssim: false
+val:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/VAL
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.5
+    mode: gaussian
+  multi_dataset: null
+  freq: ${train.checkpointing.freq}
+  start_after: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    cycle_metrics: false
+    save_to_csv: true
+test:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: ${val.sliding_window.overlap}
+    mode: gaussian
+  multi_dataset: null
+  checkpointing:
+    load_iter: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    compute_over_input: false
+    save_to_csv: true
+infer:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.infer_dataset.SynthRAD2023InferDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  is_deployment: false
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: ${val.sliding_window.overlap}
+    mode: gaussian
+  checkpointing:
+    load_iter: 0
+
+[2025-02-27 07:59:03][ganslate.utils.environment][INFO] - Saving checkpoints, logs and config to: /mnt/homeGPU/tenayat/mri_to_ct/25_02_26_thresh150
+[2025-02-27 07:59:03][ganslate.utils.environment][INFO] - Python version: 3.9.20 (main, Oct  3 2024, 07:27:41) 
+[GCC 11.2.0]
+[2025-02-27 07:59:03][ganslate.utils.environment][INFO] - PyTorch version: 2.5.1
+[2025-02-27 07:59:03][ganslate.utils.environment][INFO] - CUDA 11.8 - cuDNN 90100
+[2025-02-27 07:59:03][ganslate.utils.environment][INFO] - Global rank: 0
+[2025-02-27 07:59:03][ganslate.utils.environment][INFO] - Local rank: 0
+[2025-02-27 07:59:03][ganslate.nn.generators.vnet.selfattention_vnet3d][INFO] - Invertible layers are disabled.
+[2025-02-27 07:59:04][ganslate.engines.trainer][INFO] - Training started.
+[2025-02-27 12:37:32][ganslate.utils.environment][INFO] - Configuration:
+project: ./mri_to_ct/
+mode: train
+train:
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/25_02_26_thresh150
+  batch_size: 2
+  cuda: true
+  mixed_precision: false
+  opt_level: O1
+  logging:
+    freq: 30
+    multi_modality_split: null
+    tensorboard: true
+    wandb: null
+    image_window: null
+  dataset:
+    _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
+    root: /mnt/homeGPU/tenayat/data/TRAIN
+    num_workers: 0
+    pin_memory: true
+    patch_size:
+    - 32
+    - 160
+    - 160
+    focal_region_proportion: 0.0
+    augmentation: false
+    unpaired: false
+  checkpointing:
+    load_iter: null
+    freq: 1200
+    start_after: 0
+    load_optimizers: true
+  n_iters: 24000
+  n_iters_decay: 0
+  gan:
+    _target_: ganslate.nn.gans.paired.Pix2PixConditionalGAN
+    norm_type: instance
+    weight_init_type: normal
+    weight_init_gain: 0.02
+    optimizer:
+      adversarial_loss_type: lsgan
+      beta1: 0.5
+      beta2: 0.999
+      lr_D: 2.0e-05
+      lr_G: 0.0005
+      lambda_pix2pix: 60.0
+    generator:
+      _target_: ganslate.nn.generators.SelfAttentionVnet3D
+      in_out_channels:
+        AB:
+        - 1
+        - 1
+        BA: ${train.gan.generator.in_out_channels.AB}
+      use_memory_saving: false
+      use_inverse: false
+      first_layer_channels: 32
+      down_blocks:
+      - 2
+      - 2
+      - 3
+      up_blocks:
+      - 3
+      - 3
+      - 3
+      is_separable: false
+      enable_attention_block:
+      - false
+      - true
+      - true
+    discriminator:
+      _target_: ganslate.nn.discriminators.SelfAttentionPatchGAN3D
+      in_channels:
+        B: 2
+        A: ${train.gan.discriminator.in_channels.B}
+      ndf: 64
+      n_layers: 2
+      kernel_size:
+      - 4
+      - 4
+      - 4
+  seed: null
+  metrics:
+    discriminator_evolution: true
+    ssim: false
+val:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/VAL
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: 0.5
+    mode: gaussian
+  multi_dataset: null
+  freq: ${train.checkpointing.freq}
+  start_after: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    cycle_metrics: false
+    save_to_csv: true
+test:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: ${val.sliding_window.overlap}
+    mode: gaussian
+  multi_dataset: null
+  checkpointing:
+    load_iter: 0
+  metrics:
+    ssim: true
+    psnr: true
+    nmse: true
+    mse: true
+    mae: true
+    nmi: false
+    histogram_chi2: false
+    compute_over_input: false
+    save_to_csv: true
+infer:
+  output_dir: ${train.output_dir}
+  batch_size: ${train.batch_size}
+  cuda: ${train.cuda}
+  mixed_precision: ${train.mixed_precision}
+  opt_level: ${train.opt_level}
+  logging: ${train.logging}
+  dataset:
+    _target_: project.datasets.infer_dataset.SynthRAD2023InferDataset
+    root: /mnt/homeGPU/tenayat/data/TEST
+    num_workers: 0
+    pin_memory: true
+  is_deployment: false
+  sliding_window:
+    window_size: ${train.dataset.patch_size}
+    batch_size: 1
+    overlap: ${val.sliding_window.overlap}
+    mode: gaussian
+  checkpointing:
+    load_iter: 0
+
+[2025-02-27 12:37:32][ganslate.utils.environment][INFO] - Saving checkpoints, logs and config to: /mnt/homeGPU/tenayat/mri_to_ct/25_02_26_thresh150
+[2025-02-27 12:37:32][ganslate.utils.environment][INFO] - Python version: 3.9.20 (main, Oct  3 2024, 07:27:41) 
+[GCC 11.2.0]
+[2025-02-27 12:37:32][ganslate.utils.environment][INFO] - PyTorch version: 2.5.1
+[2025-02-27 12:37:32][ganslate.utils.environment][INFO] - CUDA 11.8 - cuDNN 90100
+[2025-02-27 12:37:32][ganslate.utils.environment][INFO] - Global rank: 0
+[2025-02-27 12:37:32][ganslate.utils.environment][INFO] - Local rank: 0
+[2025-02-27 12:37:32][ganslate.nn.generators.vnet.selfattention_vnet3d][INFO] - Invertible layers are disabled.
+[2025-02-27 12:37:33][ganslate.engines.trainer][INFO] - Training started.
+[2025-02-27 12:40:30][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 30 | comp: 0.329, data: 3.054 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 2.476 D: 1.819 pix2pix: 39.598 
+[2025-02-27 12:42:12][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 60 | comp: 0.328, data: 2.469 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.145 D: 1.429 pix2pix: 25.643 
+[2025-02-27 12:43:16][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 90 | comp: 0.332, data: 1.334 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.786 D: 0.978 pix2pix: 17.018 
+[2025-02-27 12:44:23][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 120 | comp: 0.331, data: 1.491 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.013 D: 0.979 pix2pix: 11.362 
+[2025-02-27 12:45:32][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 150 | comp: 0.332, data: 1.642 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.405 D: 0.844 pix2pix: 7.935 
+[2025-02-27 12:46:44][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 180 | comp: 0.331, data: 1.317 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.339 D: 0.826 pix2pix: 5.513 
+[2025-02-27 12:47:56][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 210 | comp: 0.333, data: 1.516 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.395 D: 0.784 pix2pix: 5.836 
+[2025-02-27 12:49:11][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 240 | comp: 0.331, data: 2.049 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.416 D: 0.725 pix2pix: 6.475 
+[2025-02-27 12:50:25][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 270 | comp: 0.333, data: 1.647 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.444 D: 0.711 pix2pix: 4.527 
+[2025-02-27 12:51:38][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 300 | comp: 0.332, data: 1.691 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.400 D: 0.604 pix2pix: 4.171 
+[2025-02-27 12:52:50][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 330 | comp: 0.334, data: 2.066 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.359 D: 0.634 pix2pix: 3.319 
+[2025-02-27 12:53:58][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 360 | comp: 0.334, data: 1.329 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.352 D: 0.564 pix2pix: 3.692 
+[2025-02-27 12:55:00][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 390 | comp: 0.334, data: 1.248 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.369 D: 0.665 pix2pix: 4.133 
+[2025-02-27 12:56:09][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 420 | comp: 0.331, data: 1.659 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.520 D: 0.512 pix2pix: 2.697 
+[2025-02-27 12:57:19][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 450 | comp: 0.333, data: 1.582 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.376 D: 0.735 pix2pix: 2.257 
+[2025-02-27 12:58:27][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 480 | comp: 0.333, data: 1.382 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.485 D: 0.586 pix2pix: 2.451 
+[2025-02-27 12:59:37][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 510 | comp: 0.331, data: 1.750 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.424 D: 0.634 pix2pix: 3.737 
+[2025-02-27 13:00:46][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 540 | comp: 0.331, data: 1.698 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.290 D: 0.573 pix2pix: 2.685 
+[2025-02-27 13:01:56][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 570 | comp: 0.330, data: 1.506 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.366 D: 0.532 pix2pix: 3.551 
+[2025-02-27 13:03:05][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 600 | comp: 0.332, data: 1.623 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.313 D: 0.594 pix2pix: 3.787 
+[2025-02-27 13:04:17][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 630 | comp: 0.334, data: 1.972 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.303 D: 0.471 pix2pix: 2.622 
+[2025-02-27 13:05:24][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 660 | comp: 0.332, data: 1.584 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.206 D: 0.539 pix2pix: 2.966 
+[2025-02-27 13:06:33][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 690 | comp: 0.333, data: 1.284 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.310 D: 0.558 pix2pix: 3.689 
+[2025-02-27 13:07:40][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 720 | comp: 0.334, data: 1.559 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.296 D: 0.686 pix2pix: 3.629 
+[2025-02-27 13:08:48][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 750 | comp: 0.334, data: 1.332 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.348 D: 0.499 pix2pix: 3.152 
+[2025-02-27 13:09:57][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 780 | comp: 0.333, data: 1.416 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.215 D: 0.523 pix2pix: 4.563 
+[2025-02-27 13:11:06][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 810 | comp: 0.333, data: 1.438 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.363 D: 0.484 pix2pix: 2.476 
+[2025-02-27 13:12:09][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 840 | comp: 0.334, data: 1.418 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.235 D: 0.539 pix2pix: 2.937 
+[2025-02-27 13:13:13][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 870 | comp: 0.332, data: 1.767 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.362 D: 0.593 pix2pix: 2.096 
+[2025-02-27 13:14:18][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 900 | comp: 0.332, data: 1.978 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.265 D: 0.524 pix2pix: 1.993 
+[2025-02-27 13:15:20][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 930 | comp: 0.361, data: 1.179 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.290 D: 0.458 pix2pix: 3.006 
+[2025-02-27 13:16:21][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 960 | comp: 0.333, data: 1.267 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.385 D: 0.495 pix2pix: 3.045 
+[2025-02-27 13:17:24][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 990 | comp: 0.334, data: 1.396 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.292 D: 0.559 pix2pix: 3.229 
+[2025-02-27 13:18:27][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1020 | comp: 0.333, data: 1.232 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.362 D: 0.636 pix2pix: 2.782 
+[2025-02-27 13:19:32][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1050 | comp: 0.332, data: 1.369 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.268 D: 0.633 pix2pix: 3.905 
+[2025-02-27 13:20:38][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1080 | comp: 0.334, data: 1.568 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.340 D: 0.532 pix2pix: 1.873 
+[2025-02-27 13:21:45][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1110 | comp: 0.331, data: 1.981 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.429 D: 0.571 pix2pix: 1.899 
+[2025-02-27 13:22:53][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1140 | comp: 0.333, data: 1.469 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.304 D: 0.728 pix2pix: 2.493 
+[2025-02-27 13:24:01][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1170 | comp: 0.332, data: 1.431 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.302 D: 0.467 pix2pix: 3.007 
+[2025-02-27 13:25:10][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1200 | comp: 0.333, data: 1.432 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.308 D: 0.486 pix2pix: 2.125 
+[2025-02-27 13:25:11][ganslate.engines.trainer][INFO] - Saving the model after 1200 iterations.
+[2025-02-27 13:25:19][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-27 13:32:25][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 1200) --------------------
+ssim: 0.726 mse: 19831.501 nmse: 0.448 psnr: 25.728 mae: 52.411 ssim_clean_mask: 0.851 mse_clean_mask: 39313.728 nmse_clean_mask: 0.376 psnr_clean_mask: 26.590 mae_clean_mask: 84.024 
+[2025-02-27 13:33:36][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1230 | comp: 0.332, data: 1.886 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.327 D: 0.483 pix2pix: 1.967 
+[2025-02-27 13:34:42][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1260 | comp: 0.332, data: 1.611 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.232 D: 0.548 pix2pix: 2.189 
+[2025-02-27 13:35:50][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1290 | comp: 0.331, data: 1.536 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.220 D: 0.509 pix2pix: 3.232 
+[2025-02-27 13:37:02][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1320 | comp: 0.333, data: 1.711 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.209 D: 0.546 pix2pix: 2.142 
+[2025-02-27 13:38:13][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1350 | comp: 0.334, data: 1.448 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.346 D: 0.465 pix2pix: 2.399 
+[2025-02-27 13:39:24][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1380 | comp: 0.331, data: 1.558 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.369 D: 0.601 pix2pix: 2.505 
+[2025-02-27 13:40:36][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1410 | comp: 0.331, data: 1.496 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.334 D: 0.418 pix2pix: 2.635 
+[2025-02-27 13:41:45][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1440 | comp: 0.332, data: 1.970 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.287 D: 0.531 pix2pix: 2.483 
+[2025-02-27 13:42:57][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1470 | comp: 0.332, data: 1.784 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.284 D: 0.561 pix2pix: 2.532 
+[2025-02-27 13:44:12][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1500 | comp: 0.333, data: 1.751 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.283 D: 0.582 pix2pix: 2.269 
+[2025-02-27 13:45:25][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1530 | comp: 0.333, data: 1.665 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.348 D: 0.512 pix2pix: 2.641 
+[2025-02-27 13:46:38][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1560 | comp: 0.334, data: 2.153 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.345 D: 0.529 pix2pix: 1.639 
+[2025-02-27 13:47:51][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1590 | comp: 0.332, data: 1.849 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.305 D: 0.443 pix2pix: 2.023 
+[2025-02-27 13:49:06][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1620 | comp: 0.333, data: 1.678 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.256 D: 0.538 pix2pix: 1.679 
+[2025-02-27 13:50:19][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1650 | comp: 0.335, data: 1.762 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.317 D: 0.542 pix2pix: 1.157 
+[2025-02-27 13:51:34][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1680 | comp: 0.331, data: 1.621 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.259 D: 0.513 pix2pix: 2.355 
+[2025-02-27 13:52:46][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1710 | comp: 0.333, data: 1.221 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.181 D: 0.592 pix2pix: 3.216 
+[2025-02-27 13:53:49][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1740 | comp: 0.367, data: 1.166 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.272 D: 0.430 pix2pix: 2.513 
+[2025-02-27 13:54:51][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1770 | comp: 0.346, data: 1.206 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.356 D: 0.516 pix2pix: 1.445 
+[2025-02-27 13:55:53][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1800 | comp: 0.334, data: 1.543 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.367 D: 0.460 pix2pix: 2.335 
+[2025-02-27 13:56:58][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1830 | comp: 0.334, data: 1.639 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.412 D: 0.658 pix2pix: 2.003 
+[2025-02-27 13:58:03][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1860 | comp: 0.333, data: 1.410 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.277 D: 0.514 pix2pix: 2.422 
+[2025-02-27 13:59:14][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1890 | comp: 0.334, data: 1.814 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.303 D: 0.413 pix2pix: 2.338 
+[2025-02-27 14:00:21][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1920 | comp: 0.335, data: 1.646 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.194 D: 0.529 pix2pix: 1.986 
+[2025-02-27 14:01:33][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1950 | comp: 0.333, data: 1.612 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.231 D: 0.490 pix2pix: 2.473 
+[2025-02-27 14:02:44][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 1980 | comp: 0.332, data: 1.847 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.288 D: 0.510 pix2pix: 2.515 
+[2025-02-27 14:03:54][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2010 | comp: 0.334, data: 1.720 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.377 D: 0.453 pix2pix: 2.284 
+[2025-02-27 14:05:09][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2040 | comp: 0.333, data: 1.448 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.425 D: 0.432 pix2pix: 2.017 
+[2025-02-27 14:06:22][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2070 | comp: 0.331, data: 1.846 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.379 D: 0.501 pix2pix: 2.484 
+[2025-02-27 14:07:32][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2100 | comp: 0.333, data: 1.690 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.312 D: 0.434 pix2pix: 3.412 
+[2025-02-27 14:08:46][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2130 | comp: 0.331, data: 2.208 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.461 D: 0.548 pix2pix: 1.789 
+[2025-02-27 14:09:58][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2160 | comp: 0.357, data: 1.178 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.229 D: 0.561 pix2pix: 1.905 
+[2025-02-27 14:11:08][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2190 | comp: 0.332, data: 1.263 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.447 D: 0.593 pix2pix: 1.205 
+[2025-02-27 14:12:10][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2220 | comp: 0.367, data: 1.164 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.271 D: 0.528 pix2pix: 1.645 
+[2025-02-27 14:13:12][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2250 | comp: 0.347, data: 1.196 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.224 D: 0.506 pix2pix: 1.519 
+[2025-02-27 14:14:15][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2280 | comp: 0.333, data: 1.378 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.330 D: 0.464 pix2pix: 2.848 
+[2025-02-27 14:15:17][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2310 | comp: 0.435, data: 1.027 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.263 D: 0.477 pix2pix: 1.917 
+[2025-02-27 14:16:20][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2340 | comp: 0.334, data: 1.367 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.163 D: 0.469 pix2pix: 2.735 
+[2025-02-27 14:17:23][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2370 | comp: 0.334, data: 1.238 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.363 D: 0.464 pix2pix: 2.250 
+[2025-02-27 14:18:28][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2400 | comp: 0.332, data: 1.368 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.285 D: 0.469 pix2pix: 2.003 
+[2025-02-27 14:18:29][ganslate.engines.trainer][INFO] - Saving the model after 2400 iterations.
+[2025-02-27 14:18:35][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-27 14:25:25][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 2400) --------------------
+ssim: 0.781 mse: 13377.585 nmse: 0.292 psnr: 27.543 mae: 40.740 ssim_clean_mask: 0.881 mse_clean_mask: 26187.037 nmse_clean_mask: 0.244 psnr_clean_mask: 28.450 mae_clean_mask: 62.201 
+[2025-02-27 14:26:31][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2430 | comp: 0.333, data: 1.270 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.276 D: 0.465 pix2pix: 2.511 
+[2025-02-27 14:27:39][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2460 | comp: 0.331, data: 1.720 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.304 D: 0.495 pix2pix: 1.487 
+[2025-02-27 14:28:48][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2490 | comp: 0.338, data: 1.220 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.358 D: 0.572 pix2pix: 1.480 
+[2025-02-27 14:30:00][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2520 | comp: 0.331, data: 1.848 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.232 D: 0.499 pix2pix: 1.945 
+[2025-02-27 14:31:10][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2550 | comp: 0.331, data: 1.444 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.324 D: 0.478 pix2pix: 1.874 
+[2025-02-27 14:32:22][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2580 | comp: 0.334, data: 1.501 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.227 D: 0.495 pix2pix: 1.837 
+[2025-02-27 14:33:32][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2610 | comp: 0.332, data: 1.846 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.246 D: 0.476 pix2pix: 2.201 
+[2025-02-27 14:34:45][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2640 | comp: 0.331, data: 1.330 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.258 D: 0.479 pix2pix: 2.044 
+[2025-02-27 14:35:57][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2670 | comp: 0.331, data: 1.594 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.416 D: 0.452 pix2pix: 2.656 
+[2025-02-27 14:37:10][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2700 | comp: 0.333, data: 1.845 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.247 D: 0.484 pix2pix: 1.059 
+[2025-02-27 14:38:23][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2730 | comp: 0.332, data: 1.698 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.434 D: 0.447 pix2pix: 2.439 
+[2025-02-27 14:39:36][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2760 | comp: 0.333, data: 1.770 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.275 D: 0.403 pix2pix: 2.229 
+[2025-02-27 14:40:49][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2790 | comp: 0.332, data: 1.943 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.438 D: 0.573 pix2pix: 1.614 
+[2025-02-27 14:42:01][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2820 | comp: 0.334, data: 1.911 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.300 D: 0.475 pix2pix: 1.779 
+[2025-02-27 14:43:14][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2850 | comp: 0.331, data: 1.914 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.366 D: 0.449 pix2pix: 2.214 
+[2025-02-27 14:44:23][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2880 | comp: 0.335, data: 1.641 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.300 D: 0.485 pix2pix: 2.104 
+[2025-02-27 14:45:30][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2910 | comp: 0.332, data: 1.793 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.284 D: 0.521 pix2pix: 1.980 
+[2025-02-27 14:46:41][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2940 | comp: 0.332, data: 2.085 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.411 D: 0.452 pix2pix: 2.099 
+[2025-02-27 14:47:50][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 2970 | comp: 0.333, data: 1.717 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.186 D: 0.570 pix2pix: 2.323 
+[2025-02-27 14:48:58][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3000 | comp: 0.334, data: 1.257 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.299 D: 0.456 pix2pix: 2.611 
+[2025-02-27 14:50:03][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3030 | comp: 0.333, data: 1.421 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.252 D: 0.511 pix2pix: 1.137 
+[2025-02-27 14:51:06][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3060 | comp: 0.332, data: 1.539 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.328 D: 0.447 pix2pix: 2.830 
+[2025-02-27 14:52:10][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3090 | comp: 0.332, data: 1.347 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.297 D: 0.474 pix2pix: 2.387 
+[2025-02-27 14:53:15][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3120 | comp: 0.341, data: 1.212 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.229 D: 0.449 pix2pix: 2.047 
+[2025-02-27 14:54:17][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3150 | comp: 0.332, data: 1.327 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.350 D: 0.530 pix2pix: 2.527 
+[2025-02-27 14:55:23][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3180 | comp: 0.332, data: 1.344 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.168 D: 0.532 pix2pix: 1.177 
+[2025-02-27 14:56:27][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3210 | comp: 0.334, data: 1.381 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.205 D: 0.492 pix2pix: 3.118 
+[2025-02-27 14:57:30][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3240 | comp: 0.333, data: 1.488 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.355 D: 0.526 pix2pix: 1.521 
+[2025-02-27 14:58:34][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3270 | comp: 0.333, data: 1.254 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.324 D: 0.385 pix2pix: 1.747 
+[2025-02-27 14:59:38][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3300 | comp: 0.334, data: 1.392 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.290 D: 0.496 pix2pix: 1.797 
+[2025-02-27 15:00:44][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3330 | comp: 0.335, data: 1.340 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.204 D: 0.534 pix2pix: 1.259 
+[2025-02-27 15:01:47][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3360 | comp: 0.336, data: 1.239 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.186 D: 0.530 pix2pix: 1.483 
+[2025-02-27 15:02:51][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3390 | comp: 0.334, data: 1.538 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.425 D: 0.510 pix2pix: 2.419 
+[2025-02-27 15:03:54][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3420 | comp: 0.335, data: 1.459 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.324 D: 0.483 pix2pix: 2.212 
+[2025-02-27 15:04:57][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3450 | comp: 0.335, data: 1.252 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.252 D: 0.519 pix2pix: 1.481 
+[2025-02-27 15:06:03][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3480 | comp: 0.334, data: 1.326 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.278 D: 0.516 pix2pix: 1.546 
+[2025-02-27 15:07:07][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3510 | comp: 0.333, data: 1.473 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.334 D: 0.472 pix2pix: 1.957 
+[2025-02-27 15:08:11][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3540 | comp: 0.332, data: 1.564 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.237 D: 0.430 pix2pix: 1.586 
+[2025-02-27 15:09:14][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3570 | comp: 0.332, data: 1.564 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.305 D: 0.481 pix2pix: 1.085 
+[2025-02-27 15:10:19][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3600 | comp: 0.332, data: 1.325 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.289 D: 0.479 pix2pix: 1.455 
+[2025-02-27 15:10:19][ganslate.engines.trainer][INFO] - Saving the model after 3600 iterations.
+[2025-02-27 15:10:27][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-27 15:17:13][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 3600) --------------------
+ssim: 0.793 mse: 11928.121 nmse: 0.264 psnr: 28.081 mae: 38.363 ssim_clean_mask: 0.890 mse_clean_mask: 22392.524 nmse_clean_mask: 0.210 psnr_clean_mask: 29.159 mae_clean_mask: 57.145 
+[2025-02-27 15:18:16][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3630 | comp: 0.334, data: 1.325 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.268 D: 0.489 pix2pix: 1.616 
+[2025-02-27 15:19:19][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3660 | comp: 0.333, data: 1.488 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.366 D: 0.521 pix2pix: 1.685 
+[2025-02-27 15:20:23][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3690 | comp: 0.334, data: 1.342 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.254 D: 0.504 pix2pix: 2.128 
+[2025-02-27 15:21:24][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3720 | comp: 0.335, data: 1.413 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.290 D: 0.443 pix2pix: 2.416 
+[2025-02-27 15:22:26][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3750 | comp: 0.335, data: 1.375 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.230 D: 0.503 pix2pix: 1.831 
+[2025-02-27 15:23:29][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3780 | comp: 0.384, data: 1.132 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.202 D: 0.468 pix2pix: 2.176 
+[2025-02-27 15:24:32][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3810 | comp: 0.379, data: 1.144 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.292 D: 0.525 pix2pix: 1.613 
+[2025-02-27 15:25:35][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3840 | comp: 0.333, data: 1.280 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.461 D: 0.472 pix2pix: 1.677 
+[2025-02-27 15:26:38][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3870 | comp: 0.332, data: 1.305 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.330 D: 0.528 pix2pix: 0.977 
+[2025-02-27 15:27:40][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3900 | comp: 0.332, data: 1.536 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.208 D: 0.477 pix2pix: 2.056 
+[2025-02-27 15:28:41][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3930 | comp: 0.334, data: 1.337 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.330 D: 0.484 pix2pix: 1.440 
+[2025-02-27 15:29:41][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3960 | comp: 0.333, data: 1.238 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.241 D: 0.491 pix2pix: 1.484 
+[2025-02-27 15:30:47][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 3990 | comp: 0.333, data: 1.864 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.330 D: 0.526 pix2pix: 1.348 
+[2025-02-27 15:31:51][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4020 | comp: 0.345, data: 1.207 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.329 D: 0.450 pix2pix: 2.112 
+[2025-02-27 15:32:53][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4050 | comp: 0.336, data: 1.282 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.272 D: 0.446 pix2pix: 2.503 
+[2025-02-27 15:33:57][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4080 | comp: 0.332, data: 1.394 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.174 D: 0.551 pix2pix: 1.128 
+[2025-02-27 15:35:01][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4110 | comp: 0.334, data: 1.281 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.287 D: 0.497 pix2pix: 0.944 
+[2025-02-27 15:36:03][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4140 | comp: 0.332, data: 1.382 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.362 D: 0.475 pix2pix: 1.677 
+[2025-02-27 15:37:07][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4170 | comp: 0.335, data: 1.379 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.238 D: 0.490 pix2pix: 1.509 
+[2025-02-27 15:38:13][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4200 | comp: 0.333, data: 1.946 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.372 D: 0.507 pix2pix: 2.384 
+[2025-02-27 15:39:21][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4230 | comp: 0.334, data: 1.710 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.195 D: 0.474 pix2pix: 1.830 
+[2025-02-27 15:40:25][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4260 | comp: 0.389, data: 1.122 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.282 D: 0.497 pix2pix: 1.363 
+[2025-02-27 15:41:31][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4290 | comp: 0.333, data: 1.383 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.067 D: 0.735 pix2pix: 2.173 
+[2025-02-27 15:42:35][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4320 | comp: 0.333, data: 1.488 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.474 D: 0.548 pix2pix: 1.605 
+[2025-02-27 15:43:39][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4350 | comp: 0.333, data: 1.311 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.324 D: 0.481 pix2pix: 1.323 
+[2025-02-27 15:44:46][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4380 | comp: 0.333, data: 1.413 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.303 D: 0.549 pix2pix: 1.773 
+[2025-02-27 15:45:53][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4410 | comp: 0.354, data: 1.189 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.292 D: 0.527 pix2pix: 1.367 
+[2025-02-27 15:47:03][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4440 | comp: 0.333, data: 1.601 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.260 D: 0.478 pix2pix: 1.357 
+[2025-02-27 15:48:08][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4470 | comp: 0.332, data: 1.463 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.303 D: 0.408 pix2pix: 1.808 
+[2025-02-27 15:49:13][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4500 | comp: 0.333, data: 1.353 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.528 D: 0.582 pix2pix: 1.274 
+[2025-02-27 15:50:17][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4530 | comp: 0.334, data: 1.618 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.329 D: 0.524 pix2pix: 1.238 
+[2025-02-27 15:51:22][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4560 | comp: 0.332, data: 1.466 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.280 D: 0.516 pix2pix: 1.978 
+[2025-02-27 15:52:24][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4590 | comp: 0.332, data: 1.725 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.369 D: 0.437 pix2pix: 1.667 
+[2025-02-27 15:53:29][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4620 | comp: 0.332, data: 1.860 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.245 D: 0.548 pix2pix: 2.125 
+[2025-02-27 15:54:33][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4650 | comp: 0.334, data: 1.335 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.299 D: 0.419 pix2pix: 2.021 
+[2025-02-27 15:55:38][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4680 | comp: 0.335, data: 1.311 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.243 D: 0.519 pix2pix: 2.594 
+[2025-02-27 15:56:42][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4710 | comp: 0.335, data: 1.337 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.361 D: 0.497 pix2pix: 1.568 
+[2025-02-27 15:57:46][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4740 | comp: 0.336, data: 1.309 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.168 D: 0.552 pix2pix: 1.318 
+[2025-02-27 15:58:51][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4770 | comp: 0.335, data: 1.374 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.238 D: 0.496 pix2pix: 1.991 
+[2025-02-27 15:59:57][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4800 | comp: 0.333, data: 1.269 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.330 D: 0.419 pix2pix: 2.400 
+[2025-02-27 15:59:58][ganslate.engines.trainer][INFO] - Saving the model after 4800 iterations.
+[2025-02-27 16:00:05][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-27 16:06:54][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 4800) --------------------
+ssim: 0.807 mse: 11368.839 nmse: 0.254 psnr: 28.199 mae: 37.066 ssim_clean_mask: 0.897 mse_clean_mask: 21715.406 nmse_clean_mask: 0.208 psnr_clean_mask: 29.269 mae_clean_mask: 55.850 
+[2025-02-27 16:08:00][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4830 | comp: 0.332, data: 1.532 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.307 D: 0.451 pix2pix: 1.497 
+[2025-02-27 16:09:05][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4860 | comp: 0.335, data: 1.397 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.342 D: 0.557 pix2pix: 1.245 
+[2025-02-27 16:10:10][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4890 | comp: 0.332, data: 1.331 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.325 D: 0.496 pix2pix: 1.153 
+[2025-02-27 16:11:17][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4920 | comp: 0.335, data: 1.263 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.351 D: 0.524 pix2pix: 1.444 
+[2025-02-27 16:12:25][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4950 | comp: 0.332, data: 1.523 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.294 D: 0.467 pix2pix: 2.423 
+[2025-02-27 16:13:31][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 4980 | comp: 0.337, data: 1.364 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.241 D: 0.610 pix2pix: 1.814 
+[2025-02-27 16:14:32][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5010 | comp: 0.347, data: 1.211 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.338 D: 0.438 pix2pix: 2.782 
+[2025-02-27 16:15:37][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5040 | comp: 0.335, data: 1.317 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.302 D: 0.375 pix2pix: 2.050 
+[2025-02-27 16:16:41][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5070 | comp: 0.335, data: 1.380 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.224 D: 0.487 pix2pix: 1.409 
+[2025-02-27 16:17:46][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5100 | comp: 0.334, data: 1.403 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.316 D: 0.497 pix2pix: 1.882 
+[2025-02-27 16:18:49][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5130 | comp: 0.335, data: 1.304 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.241 D: 0.530 pix2pix: 1.486 
+[2025-02-27 16:19:55][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5160 | comp: 0.332, data: 1.735 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.212 D: 0.433 pix2pix: 2.363 
+[2025-02-27 16:21:02][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5190 | comp: 0.333, data: 1.407 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.188 D: 0.470 pix2pix: 2.495 
+[2025-02-27 16:22:11][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5220 | comp: 0.333, data: 1.698 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.446 D: 0.583 pix2pix: 1.297 
+[2025-02-27 16:23:21][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5250 | comp: 0.335, data: 1.497 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.200 D: 0.513 pix2pix: 1.605 
+[2025-02-27 16:24:27][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5280 | comp: 0.334, data: 1.379 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.261 D: 0.427 pix2pix: 2.351 
+[2025-02-27 16:25:33][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5310 | comp: 0.332, data: 1.676 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.265 D: 0.544 pix2pix: 1.016 
+[2025-02-27 16:26:44][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5340 | comp: 0.333, data: 1.910 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.144 D: 0.568 pix2pix: 1.147 
+[2025-02-27 16:27:54][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5370 | comp: 0.345, data: 1.213 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.208 D: 0.502 pix2pix: 2.022 
+[2025-02-27 16:29:05][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5400 | comp: 0.333, data: 2.055 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.161 D: 0.523 pix2pix: 2.711 
+[2025-02-27 16:30:18][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5430 | comp: 0.333, data: 1.810 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.278 D: 0.453 pix2pix: 2.048 
+[2025-02-27 16:31:29][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5460 | comp: 0.334, data: 1.333 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.277 D: 0.474 pix2pix: 1.814 
+[2025-02-27 16:32:37][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5490 | comp: 0.385, data: 1.135 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.207 D: 0.571 pix2pix: 0.998 
+[2025-02-27 16:33:45][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5520 | comp: 0.334, data: 1.609 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.288 D: 0.473 pix2pix: 2.035 
+[2025-02-27 16:34:54][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5550 | comp: 0.333, data: 1.712 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.399 D: 0.497 pix2pix: 1.622 
+[2025-02-27 16:36:04][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5580 | comp: 0.334, data: 2.269 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.556 D: 0.476 pix2pix: 1.438 
+[2025-02-27 16:37:13][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5610 | comp: 0.332, data: 1.965 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.316 D: 0.528 pix2pix: 1.985 
+[2025-02-27 16:38:21][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5640 | comp: 0.332, data: 1.470 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.323 D: 0.478 pix2pix: 1.790 
+[2025-02-27 16:39:26][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5670 | comp: 0.332, data: 1.308 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.444 D: 0.542 pix2pix: 1.544 
+[2025-02-27 16:40:31][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5700 | comp: 0.332, data: 1.345 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.243 D: 0.440 pix2pix: 2.585 
+[2025-02-27 16:41:36][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5730 | comp: 0.334, data: 1.246 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.181 D: 0.467 pix2pix: 2.370 
+[2025-02-27 16:42:41][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5760 | comp: 0.336, data: 1.217 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.312 D: 0.478 pix2pix: 1.101 
+[2025-02-27 16:43:46][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5790 | comp: 0.333, data: 2.191 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.352 D: 0.467 pix2pix: 1.534 
+[2025-02-27 16:44:50][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5820 | comp: 0.334, data: 1.305 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.315 D: 0.475 pix2pix: 1.482 
+[2025-02-27 16:45:57][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5850 | comp: 0.332, data: 1.507 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.360 D: 0.497 pix2pix: 1.264 
+[2025-02-27 16:47:07][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5880 | comp: 0.332, data: 1.819 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.262 D: 0.474 pix2pix: 1.839 
+[2025-02-27 16:48:17][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5910 | comp: 0.333, data: 1.864 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.527 D: 0.269 pix2pix: 2.328 
+[2025-02-27 16:49:28][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5940 | comp: 0.332, data: 2.032 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.303 D: 0.467 pix2pix: 2.503 
+[2025-02-27 16:50:39][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 5970 | comp: 0.333, data: 1.745 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.304 D: 0.433 pix2pix: 2.715 
+[2025-02-27 16:51:54][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6000 | comp: 0.333, data: 1.863 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.302 D: 0.538 pix2pix: 1.227 
+[2025-02-27 16:51:55][ganslate.engines.trainer][INFO] - Saving the model after 6000 iterations.
+[2025-02-27 16:52:02][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-27 16:58:55][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 6000) --------------------
+ssim: 0.810 mse: 11489.677 nmse: 0.256 psnr: 28.218 mae: 36.580 ssim_clean_mask: 0.899 mse_clean_mask: 21823.391 nmse_clean_mask: 0.207 psnr_clean_mask: 29.284 mae_clean_mask: 54.733 
+[2025-02-27 17:00:09][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6030 | comp: 0.331, data: 1.732 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.151 D: 0.531 pix2pix: 2.289 
+[2025-02-27 17:01:18][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6060 | comp: 0.332, data: 1.545 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.267 D: 0.479 pix2pix: 1.266 
+[2025-02-27 17:02:27][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6090 | comp: 0.330, data: 2.150 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.313 D: 0.495 pix2pix: 1.908 
+[2025-02-27 17:03:36][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6120 | comp: 0.332, data: 1.420 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.301 D: 0.445 pix2pix: 2.462 
+[2025-02-27 17:04:43][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6150 | comp: 0.333, data: 1.593 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.323 D: 0.483 pix2pix: 1.368 
+[2025-02-27 17:05:54][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6180 | comp: 0.333, data: 1.857 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.197 D: 0.521 pix2pix: 1.633 
+[2025-02-27 17:07:07][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6210 | comp: 0.333, data: 1.751 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.160 D: 0.534 pix2pix: 1.794 
+[2025-02-27 17:08:20][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6240 | comp: 0.334, data: 1.803 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.243 D: 0.491 pix2pix: 1.233 
+[2025-02-27 17:09:32][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6270 | comp: 0.334, data: 1.561 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.309 D: 0.426 pix2pix: 2.187 
+[2025-02-27 17:10:45][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6300 | comp: 0.334, data: 1.613 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.208 D: 0.491 pix2pix: 1.952 
+[2025-02-27 17:11:54][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6330 | comp: 0.333, data: 1.379 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.380 D: 0.375 pix2pix: 1.280 
+[2025-02-27 17:12:56][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6360 | comp: 0.333, data: 1.278 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.248 D: 0.580 pix2pix: 1.233 
+[2025-02-27 17:14:01][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6390 | comp: 0.333, data: 1.236 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.445 D: 0.565 pix2pix: 0.828 
+[2025-02-27 17:15:10][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6420 | comp: 0.333, data: 1.447 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.274 D: 0.497 pix2pix: 1.806 
+[2025-02-27 17:16:20][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6450 | comp: 0.333, data: 1.418 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.255 D: 0.460 pix2pix: 1.643 
+[2025-02-27 17:17:27][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6480 | comp: 0.332, data: 1.785 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.391 D: 0.408 pix2pix: 1.384 
+[2025-02-27 17:18:32][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6510 | comp: 0.333, data: 1.436 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.203 D: 0.485 pix2pix: 1.810 
+[2025-02-27 17:19:38][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6540 | comp: 0.333, data: 1.694 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.285 D: 0.430 pix2pix: 1.628 
+[2025-02-27 17:20:45][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6570 | comp: 0.332, data: 1.578 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.196 D: 0.468 pix2pix: 1.924 
+[2025-02-27 17:21:54][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6600 | comp: 0.333, data: 1.413 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.329 D: 0.435 pix2pix: 1.700 
+[2025-02-27 17:23:02][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6630 | comp: 0.409, data: 1.086 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.250 D: 0.502 pix2pix: 1.090 
+[2025-02-27 17:24:05][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6660 | comp: 0.334, data: 1.444 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.329 D: 0.492 pix2pix: 1.996 
+[2025-02-27 17:25:11][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6690 | comp: 0.334, data: 1.316 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.284 D: 0.456 pix2pix: 1.498 
+[2025-02-27 17:26:19][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6720 | comp: 0.333, data: 1.471 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.241 D: 0.459 pix2pix: 2.118 
+[2025-02-27 17:27:28][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6750 | comp: 0.333, data: 1.493 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.432 D: 0.527 pix2pix: 1.151 
+[2025-02-27 17:28:38][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6780 | comp: 0.334, data: 1.618 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.218 D: 0.483 pix2pix: 2.178 
+[2025-02-27 17:29:50][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6810 | comp: 0.332, data: 1.558 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.392 D: 0.531 pix2pix: 1.138 
+[2025-02-27 17:31:00][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6840 | comp: 0.332, data: 1.511 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.370 D: 0.488 pix2pix: 1.467 
+[2025-02-27 17:32:11][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6870 | comp: 0.331, data: 1.411 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.261 D: 0.445 pix2pix: 2.254 
+[2025-02-27 17:33:20][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6900 | comp: 0.334, data: 1.520 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.253 D: 0.464 pix2pix: 1.345 
+[2025-02-27 17:34:33][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6930 | comp: 0.331, data: 1.565 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.255 D: 0.520 pix2pix: 1.086 
+[2025-02-27 17:35:43][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6960 | comp: 0.334, data: 1.545 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.326 D: 0.413 pix2pix: 2.967 
+[2025-02-27 17:36:53][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 6990 | comp: 0.332, data: 1.315 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.256 D: 0.407 pix2pix: 2.284 
+[2025-02-27 17:38:03][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7020 | comp: 0.333, data: 1.675 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.278 D: 0.515 pix2pix: 1.840 
+[2025-02-27 17:39:06][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7050 | comp: 0.333, data: 1.410 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.128 D: 0.536 pix2pix: 1.147 
+[2025-02-27 17:40:09][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7080 | comp: 0.334, data: 1.649 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.330 D: 0.462 pix2pix: 1.739 
+[2025-02-27 17:41:14][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7110 | comp: 0.334, data: 1.374 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.202 D: 0.568 pix2pix: 2.328 
+[2025-02-27 17:42:19][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7140 | comp: 0.332, data: 1.565 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.251 D: 0.529 pix2pix: 0.987 
+[2025-02-27 17:43:24][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7170 | comp: 0.336, data: 1.411 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.157 D: 0.552 pix2pix: 1.480 
+[2025-02-27 17:44:29][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7200 | comp: 0.333, data: 1.433 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.345 D: 0.475 pix2pix: 1.356 
+[2025-02-27 17:44:29][ganslate.engines.trainer][INFO] - Saving the model after 7200 iterations.
+[2025-02-27 17:44:35][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-27 17:51:25][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 7200) --------------------
+ssim: 0.814 mse: 10550.362 nmse: 0.236 psnr: 28.628 mae: 35.323 ssim_clean_mask: 0.904 mse_clean_mask: 19461.184 nmse_clean_mask: 0.185 psnr_clean_mask: 29.827 mae_clean_mask: 51.769 
+[2025-02-27 17:52:32][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7230 | comp: 0.333, data: 2.189 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.378 D: 0.496 pix2pix: 1.251 
+[2025-02-27 17:53:40][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7260 | comp: 0.333, data: 1.403 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.164 D: 0.581 pix2pix: 1.789 
+[2025-02-27 17:54:48][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7290 | comp: 0.332, data: 1.445 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.231 D: 0.445 pix2pix: 2.004 
+[2025-02-27 17:55:58][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7320 | comp: 0.333, data: 1.519 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.312 D: 0.485 pix2pix: 1.626 
+[2025-02-27 17:57:10][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7350 | comp: 0.332, data: 1.451 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.270 D: 0.396 pix2pix: 1.748 
+[2025-02-27 17:58:17][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7380 | comp: 0.334, data: 1.291 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.212 D: 0.505 pix2pix: 1.852 
+[2025-02-27 17:59:20][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7410 | comp: 0.492, data: 0.921 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.183 D: 0.518 pix2pix: 1.717 
+[2025-02-27 18:00:22][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7440 | comp: 0.334, data: 1.244 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.389 D: 0.461 pix2pix: 1.645 
+[2025-02-27 18:01:27][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7470 | comp: 0.333, data: 1.716 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.279 D: 0.475 pix2pix: 1.470 
+[2025-02-27 18:02:31][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7500 | comp: 0.333, data: 1.462 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.304 D: 0.443 pix2pix: 2.145 
+[2025-02-27 18:03:39][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7530 | comp: 0.334, data: 1.535 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.289 D: 0.511 pix2pix: 1.508 
+[2025-02-27 18:04:47][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7560 | comp: 0.334, data: 1.576 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.247 D: 0.444 pix2pix: 1.877 
+[2025-02-27 18:05:53][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7590 | comp: 0.333, data: 1.419 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.219 D: 0.460 pix2pix: 1.997 
+[2025-02-27 18:06:58][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7620 | comp: 0.333, data: 1.426 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.254 D: 0.453 pix2pix: 1.410 
+[2025-02-27 18:08:04][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7650 | comp: 0.334, data: 1.661 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.293 D: 0.427 pix2pix: 1.305 
+[2025-02-27 18:09:14][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7680 | comp: 0.333, data: 1.380 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.368 D: 0.446 pix2pix: 2.072 
+[2025-02-27 18:10:24][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7710 | comp: 0.332, data: 1.735 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.269 D: 0.498 pix2pix: 0.891 
+[2025-02-27 18:11:29][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7740 | comp: 0.333, data: 1.663 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.222 D: 0.457 pix2pix: 1.064 
+[2025-02-27 18:12:33][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7770 | comp: 0.333, data: 1.385 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.163 D: 0.457 pix2pix: 2.175 
+[2025-02-27 18:13:36][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7800 | comp: 0.332, data: 1.561 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.330 D: 0.495 pix2pix: 1.354 
+[2025-02-27 18:14:41][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7830 | comp: 0.333, data: 1.346 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.446 D: 0.273 pix2pix: 2.158 
+[2025-02-27 18:15:46][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7860 | comp: 0.334, data: 1.315 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.369 D: 0.355 pix2pix: 1.288 
+[2025-02-27 18:16:49][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7890 | comp: 0.345, data: 1.216 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.488 D: 0.389 pix2pix: 1.971 
+[2025-02-27 18:17:55][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7920 | comp: 0.334, data: 1.546 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.401 D: 0.187 pix2pix: 1.543 
+[2025-02-27 18:18:58][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7950 | comp: 0.335, data: 1.310 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.301 D: 0.489 pix2pix: 1.564 
+[2025-02-27 18:20:02][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 7980 | comp: 0.337, data: 1.295 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.366 D: 0.319 pix2pix: 1.614 
+[2025-02-27 18:21:08][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8010 | comp: 0.334, data: 1.625 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.448 D: 0.188 pix2pix: 1.582 
+[2025-02-27 18:22:11][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8040 | comp: 0.334, data: 1.439 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.622 D: 0.227 pix2pix: 1.327 
+[2025-02-27 18:23:13][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8070 | comp: 0.335, data: 1.242 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.488 D: 0.501 pix2pix: 2.421 
+[2025-02-27 18:24:15][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8100 | comp: 0.393, data: 1.120 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.658 D: 0.707 pix2pix: 1.219 
+[2025-02-27 18:25:18][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8130 | comp: 0.335, data: 1.252 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.597 D: 0.553 pix2pix: 1.389 
+[2025-02-27 18:26:21][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8160 | comp: 0.418, data: 1.057 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.386 D: 0.261 pix2pix: 1.604 
+[2025-02-27 18:27:25][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8190 | comp: 0.332, data: 1.423 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.245 D: 0.492 pix2pix: 1.507 
+[2025-02-27 18:28:29][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8220 | comp: 0.333, data: 1.353 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.442 D: 0.580 pix2pix: 1.346 
+[2025-02-27 18:29:34][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8250 | comp: 0.332, data: 1.404 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.616 D: 0.448 pix2pix: 1.070 
+[2025-02-27 18:30:36][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8280 | comp: 0.333, data: 1.825 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.260 D: 0.503 pix2pix: 0.639 
+[2025-02-27 18:31:43][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8310 | comp: 0.333, data: 1.618 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.287 D: 0.379 pix2pix: 2.758 
+[2025-02-27 18:32:48][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8340 | comp: 0.332, data: 1.436 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.279 D: 0.396 pix2pix: 2.248 
+[2025-02-27 18:33:53][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8370 | comp: 0.333, data: 1.356 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.390 D: 0.460 pix2pix: 1.803 
+[2025-02-27 18:34:56][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8400 | comp: 0.333, data: 1.288 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.256 D: 0.303 pix2pix: 1.570 
+[2025-02-27 18:34:56][ganslate.engines.trainer][INFO] - Saving the model after 8400 iterations.
+[2025-02-27 18:35:04][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-27 18:41:53][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 8400) --------------------
+ssim: 0.761 mse: 11705.860 nmse: 0.263 psnr: 28.099 mae: 39.537 ssim_clean_mask: 0.889 mse_clean_mask: 22454.712 nmse_clean_mask: 0.216 psnr_clean_mask: 29.102 mae_clean_mask: 56.547 
+[2025-02-27 18:42:57][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8430 | comp: 0.333, data: 1.522 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.428 D: 0.343 pix2pix: 2.131 
+[2025-02-27 18:44:07][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8460 | comp: 0.332, data: 1.764 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.326 D: 0.474 pix2pix: 1.496 
+[2025-02-27 18:45:19][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8490 | comp: 0.332, data: 1.290 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.303 D: 0.373 pix2pix: 2.137 
+[2025-02-27 18:46:30][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8520 | comp: 0.332, data: 1.798 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.508 D: 0.326 pix2pix: 1.625 
+[2025-02-27 18:47:44][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8550 | comp: 0.332, data: 1.686 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.300 D: 0.446 pix2pix: 1.157 
+[2025-02-27 18:48:59][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8580 | comp: 0.333, data: 1.478 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.274 D: 0.479 pix2pix: 1.402 
+[2025-02-27 18:50:07][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8610 | comp: 0.334, data: 1.563 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.134 D: 0.508 pix2pix: 1.431 
+[2025-02-27 18:51:13][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8640 | comp: 0.332, data: 1.554 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.259 D: 0.400 pix2pix: 1.616 
+[2025-02-27 18:52:18][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8670 | comp: 0.333, data: 1.380 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.304 D: 0.312 pix2pix: 1.640 
+[2025-02-27 18:53:30][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8700 | comp: 0.342, data: 1.217 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.391 D: 0.482 pix2pix: 2.178 
+[2025-02-27 18:54:42][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8730 | comp: 0.334, data: 1.562 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.328 D: 0.404 pix2pix: 1.828 
+[2025-02-27 18:55:50][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8760 | comp: 0.334, data: 1.512 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.225 D: 0.361 pix2pix: 2.181 
+[2025-02-27 18:57:00][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8790 | comp: 0.335, data: 1.430 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.247 D: 0.454 pix2pix: 1.430 
+[2025-02-27 18:58:10][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8820 | comp: 0.335, data: 1.665 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.366 D: 0.215 pix2pix: 2.486 
+[2025-02-27 18:59:22][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8850 | comp: 0.333, data: 1.680 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.519 D: 0.291 pix2pix: 2.016 
+[2025-02-27 19:00:31][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8880 | comp: 0.332, data: 1.609 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.782 D: 0.212 pix2pix: 0.780 
+[2025-02-27 19:01:43][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8910 | comp: 0.334, data: 1.659 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.225 D: 0.536 pix2pix: 1.632 
+[2025-02-27 19:02:57][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8940 | comp: 0.332, data: 1.780 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.212 D: 0.435 pix2pix: 1.908 
+[2025-02-27 19:04:08][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 8970 | comp: 0.331, data: 1.339 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.390 D: 0.435 pix2pix: 1.863 
+[2025-02-27 19:05:12][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9000 | comp: 0.332, data: 1.495 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.981 D: 0.097 pix2pix: 1.986 
+[2025-02-27 19:06:17][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9030 | comp: 0.332, data: 1.333 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.994 D: 0.645 pix2pix: 1.277 
+[2025-02-27 19:07:23][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9060 | comp: 0.332, data: 1.882 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.478 D: 0.282 pix2pix: 1.787 
+[2025-02-27 19:08:27][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9090 | comp: 0.333, data: 1.345 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.192 D: 0.778 pix2pix: 1.179 
+[2025-02-27 19:09:31][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9120 | comp: 0.332, data: 2.053 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.457 D: 0.201 pix2pix: 1.314 
+[2025-02-27 19:10:36][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9150 | comp: 0.332, data: 1.559 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.358 D: 0.391 pix2pix: 1.411 
+[2025-02-27 19:11:41][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9180 | comp: 0.333, data: 1.322 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.376 D: 0.525 pix2pix: 1.136 
+[2025-02-27 19:12:46][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9210 | comp: 0.333, data: 1.461 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.290 D: 0.341 pix2pix: 1.633 
+[2025-02-27 19:13:51][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9240 | comp: 0.341, data: 1.220 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.244 D: 0.416 pix2pix: 1.424 
+[2025-02-27 19:14:58][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9270 | comp: 0.335, data: 1.554 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.413 D: 0.368 pix2pix: 1.906 
+[2025-02-27 19:16:09][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9300 | comp: 0.333, data: 1.659 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.529 D: 0.200 pix2pix: 1.700 
+[2025-02-27 19:17:19][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9330 | comp: 0.333, data: 1.606 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.132 D: 0.620 pix2pix: 1.567 
+[2025-02-27 19:18:27][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9360 | comp: 0.333, data: 1.350 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.406 D: 0.246 pix2pix: 1.938 
+[2025-02-27 19:19:37][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9390 | comp: 0.334, data: 1.275 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.535 D: 0.568 pix2pix: 1.186 
+[2025-02-27 19:20:46][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9420 | comp: 0.333, data: 1.417 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.136 D: 0.453 pix2pix: 2.303 
+[2025-02-27 19:21:54][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9450 | comp: 0.332, data: 1.472 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.413 D: 0.183 pix2pix: 2.261 
+[2025-02-27 19:23:03][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9480 | comp: 0.333, data: 1.331 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.643 D: 0.442 pix2pix: 2.056 
+[2025-02-27 19:24:14][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9510 | comp: 0.331, data: 1.820 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.216 D: 0.393 pix2pix: 1.117 
+[2025-02-27 19:25:22][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9540 | comp: 0.331, data: 1.764 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.620 D: 0.347 pix2pix: 1.412 
+[2025-02-27 19:26:32][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9570 | comp: 0.394, data: 1.099 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.435 D: 0.386 pix2pix: 1.206 
+[2025-02-27 19:27:40][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9600 | comp: 0.332, data: 1.306 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.619 D: 0.391 pix2pix: 1.202 
+[2025-02-27 19:27:40][ganslate.engines.trainer][INFO] - Saving the model after 9600 iterations.
+[2025-02-27 19:27:48][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-27 19:34:36][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 9600) --------------------
+ssim: 0.810 mse: 10295.741 nmse: 0.228 psnr: 28.763 mae: 35.269 ssim_clean_mask: 0.900 mse_clean_mask: 18848.392 nmse_clean_mask: 0.178 psnr_clean_mask: 29.983 mae_clean_mask: 51.191 
+[2025-02-27 19:35:44][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9630 | comp: 0.333, data: 1.809 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.389 D: 0.420 pix2pix: 1.096 
+[2025-02-27 19:36:53][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9660 | comp: 0.332, data: 1.639 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.339 D: 0.235 pix2pix: 2.066 
+[2025-02-27 19:38:02][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9690 | comp: 0.334, data: 1.501 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.550 D: 0.114 pix2pix: 2.119 
+[2025-02-27 19:39:11][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9720 | comp: 0.332, data: 1.446 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.723 D: 0.055 pix2pix: 1.658 
+[2025-02-27 19:40:20][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9750 | comp: 0.331, data: 1.648 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.980 D: 0.303 pix2pix: 1.086 
+[2025-02-27 19:41:32][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9780 | comp: 0.332, data: 1.558 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.384 D: 0.249 pix2pix: 1.503 
+[2025-02-27 19:42:43][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9810 | comp: 0.333, data: 1.497 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.840 D: 0.545 pix2pix: 1.333 
+[2025-02-27 19:43:54][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9840 | comp: 0.332, data: 1.805 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.510 D: 0.415 pix2pix: 1.507 
+[2025-02-27 19:45:04][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9870 | comp: 0.333, data: 1.650 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.499 D: 0.179 pix2pix: 1.712 
+[2025-02-27 19:46:16][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9900 | comp: 0.332, data: 1.910 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.822 D: 0.781 pix2pix: 1.743 
+[2025-02-27 19:47:27][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9930 | comp: 0.331, data: 1.669 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.481 D: 0.550 pix2pix: 2.792 
+[2025-02-27 19:48:35][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9960 | comp: 0.331, data: 2.128 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.282 D: 0.267 pix2pix: 2.534 
+[2025-02-27 19:49:46][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 9990 | comp: 0.332, data: 1.336 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.576 D: 0.266 pix2pix: 1.066 
+[2025-02-27 19:50:52][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10020 | comp: 0.355, data: 1.195 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.614 D: 0.287 pix2pix: 1.323 
+[2025-02-27 19:51:55][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10050 | comp: 0.336, data: 1.479 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.413 D: 0.349 pix2pix: 1.240 
+[2025-02-27 19:52:58][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10080 | comp: 0.334, data: 1.353 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.801 D: 0.191 pix2pix: 1.765 
+[2025-02-27 19:54:04][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10110 | comp: 0.336, data: 1.532 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.553 D: 0.337 pix2pix: 1.319 
+[2025-02-27 19:55:07][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10140 | comp: 0.336, data: 1.249 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.475 D: 0.215 pix2pix: 2.191 
+[2025-02-27 19:56:12][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10170 | comp: 0.332, data: 1.872 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.546 D: 0.123 pix2pix: 1.341 
+[2025-02-27 19:57:17][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10200 | comp: 0.333, data: 1.518 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.831 D: 0.383 pix2pix: 1.297 
+[2025-02-27 19:58:20][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10230 | comp: 0.333, data: 1.460 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.058 D: 0.100 pix2pix: 2.131 
+[2025-02-27 19:59:25][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10260 | comp: 0.334, data: 1.432 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.399 D: 0.400 pix2pix: 1.292 
+[2025-02-27 20:00:32][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10290 | comp: 0.332, data: 1.707 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.025 D: 0.097 pix2pix: 1.409 
+[2025-02-27 20:01:39][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10320 | comp: 0.333, data: 1.549 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.471 D: 0.192 pix2pix: 2.099 
+[2025-02-27 20:02:46][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10350 | comp: 0.334, data: 1.263 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.436 D: 0.242 pix2pix: 2.143 
+[2025-02-27 20:03:55][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10380 | comp: 0.331, data: 1.661 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.597 D: 0.561 pix2pix: 1.699 
+[2025-02-27 20:05:02][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10410 | comp: 0.381, data: 1.131 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.350 D: 0.205 pix2pix: 1.959 
+[2025-02-27 20:06:04][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10440 | comp: 0.332, data: 1.516 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.517 D: 0.317 pix2pix: 1.237 
+[2025-02-27 20:07:08][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10470 | comp: 0.350, data: 1.208 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.727 D: 0.360 pix2pix: 0.854 
+[2025-02-27 20:08:11][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10500 | comp: 0.334, data: 1.349 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.835 D: 0.772 pix2pix: 1.092 
+[2025-02-27 20:09:15][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10530 | comp: 0.335, data: 1.338 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.634 D: 0.117 pix2pix: 1.613 
+[2025-02-27 20:10:20][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10560 | comp: 0.334, data: 1.254 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.412 D: 0.296 pix2pix: 1.550 
+[2025-02-27 20:11:25][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10590 | comp: 0.335, data: 1.330 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.334 D: 0.223 pix2pix: 1.714 
+[2025-02-27 20:12:32][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10620 | comp: 0.334, data: 1.245 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.612 D: 0.131 pix2pix: 1.473 
+[2025-02-27 20:13:40][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10650 | comp: 0.333, data: 1.671 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.318 D: 0.385 pix2pix: 1.814 
+[2025-02-27 20:14:53][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10680 | comp: 0.332, data: 1.549 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.439 D: 0.325 pix2pix: 2.348 
+[2025-02-27 20:16:03][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10710 | comp: 0.336, data: 1.492 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.520 D: 0.152 pix2pix: 1.855 
+[2025-02-27 20:17:07][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10740 | comp: 0.331, data: 1.511 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.571 D: 0.677 pix2pix: 1.226 
+[2025-02-27 20:18:09][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10770 | comp: 0.367, data: 1.167 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.441 D: 0.251 pix2pix: 1.591 
+[2025-02-27 20:19:12][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10800 | comp: 0.334, data: 1.236 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.714 D: 0.175 pix2pix: 2.055 
+[2025-02-27 20:19:13][ganslate.engines.trainer][INFO] - Saving the model after 10800 iterations.
+[2025-02-27 20:19:20][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-27 20:26:05][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 10800) --------------------
+ssim: 0.667 mse: 10501.835 nmse: 0.234 psnr: 28.681 mae: 44.152 ssim_clean_mask: 0.868 mse_clean_mask: 17751.221 nmse_clean_mask: 0.169 psnr_clean_mask: 30.238 mae_clean_mask: 55.084 
+[2025-02-27 20:27:07][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10830 | comp: 0.335, data: 1.406 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.394 D: 0.315 pix2pix: 2.026 
+[2025-02-27 20:28:11][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10860 | comp: 0.342, data: 1.222 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.641 D: 0.120 pix2pix: 2.075 
+[2025-02-27 20:29:15][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10890 | comp: 0.385, data: 1.135 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.356 D: 0.226 pix2pix: 2.602 
+[2025-02-27 20:30:20][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10920 | comp: 0.335, data: 1.428 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.679 D: 0.132 pix2pix: 1.801 
+[2025-02-27 20:31:26][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10950 | comp: 0.333, data: 1.422 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.424 D: 0.520 pix2pix: 1.520 
+[2025-02-27 20:32:32][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 10980 | comp: 0.333, data: 1.591 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.197 D: 0.433 pix2pix: 2.846 
+[2025-02-27 20:33:39][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11010 | comp: 0.332, data: 1.984 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.004 D: 0.117 pix2pix: 1.247 
+[2025-02-27 20:34:40][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11040 | comp: 0.334, data: 1.243 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.467 D: 0.244 pix2pix: 1.399 
+[2025-02-27 20:35:45][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11070 | comp: 0.340, data: 1.212 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.506 D: 0.180 pix2pix: 1.992 
+[2025-02-27 20:36:50][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11100 | comp: 0.333, data: 1.406 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.583 D: 0.115 pix2pix: 1.488 
+[2025-02-27 20:37:54][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11130 | comp: 0.332, data: 1.701 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.655 D: 0.148 pix2pix: 2.284 
+[2025-02-27 20:39:02][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11160 | comp: 0.331, data: 1.492 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.163 D: 0.655 pix2pix: 2.614 
+[2025-02-27 20:40:12][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11190 | comp: 0.331, data: 1.504 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.464 D: 0.640 pix2pix: 0.950 
+[2025-02-27 20:41:23][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11220 | comp: 0.332, data: 1.837 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.096 D: 0.096 pix2pix: 1.555 
+[2025-02-27 20:42:34][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11250 | comp: 0.333, data: 2.118 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.485 D: 0.400 pix2pix: 2.443 
+[2025-02-27 20:43:48][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11280 | comp: 0.332, data: 1.681 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.628 D: 0.098 pix2pix: 1.765 
+[2025-02-27 20:45:01][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11310 | comp: 0.333, data: 2.386 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.682 D: 0.466 pix2pix: 2.151 
+[2025-02-27 20:46:13][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11340 | comp: 0.333, data: 1.654 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.164 D: 0.407 pix2pix: 2.497 
+[2025-02-27 20:47:25][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11370 | comp: 0.333, data: 1.975 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.575 D: 0.454 pix2pix: 1.135 
+[2025-02-27 20:48:30][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11400 | comp: 0.334, data: 1.783 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.606 D: 0.099 pix2pix: 1.065 
+[2025-02-27 20:49:35][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11430 | comp: 0.334, data: 1.284 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.108 D: 0.497 pix2pix: 2.001 
+[2025-02-27 20:50:38][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11460 | comp: 0.333, data: 1.382 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.389 D: 0.366 pix2pix: 1.281 
+[2025-02-27 20:51:46][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11490 | comp: 0.333, data: 1.348 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.840 D: 0.392 pix2pix: 1.530 
+[2025-02-27 20:52:56][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11520 | comp: 0.333, data: 1.422 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.719 D: 0.079 pix2pix: 1.232 
+[2025-02-27 20:54:06][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11550 | comp: 0.332, data: 1.398 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.375 D: 0.372 pix2pix: 2.154 
+[2025-02-27 20:55:10][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11580 | comp: 0.332, data: 1.920 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.188 D: 0.420 pix2pix: 2.010 
+[2025-02-27 20:56:15][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11610 | comp: 0.332, data: 1.440 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.653 D: 0.125 pix2pix: 2.473 
+[2025-02-27 20:57:21][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11640 | comp: 0.332, data: 1.463 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.620 D: 0.719 pix2pix: 1.896 
+[2025-02-27 20:58:27][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11670 | comp: 0.332, data: 1.451 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.468 D: 0.379 pix2pix: 2.173 
+[2025-02-27 20:59:37][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11700 | comp: 0.331, data: 1.753 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.336 D: 0.312 pix2pix: 1.211 
+[2025-02-27 21:00:50][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11730 | comp: 0.333, data: 1.859 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.901 D: 0.276 pix2pix: 1.680 
+[2025-02-27 21:02:01][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11760 | comp: 0.332, data: 1.644 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.615 D: 0.333 pix2pix: 2.324 
+[2025-02-27 21:03:10][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11790 | comp: 0.334, data: 1.474 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.517 D: 0.229 pix2pix: 1.779 
+[2025-02-27 21:04:22][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11820 | comp: 0.334, data: 1.789 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.641 D: 0.346 pix2pix: 1.653 
+[2025-02-27 21:05:32][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11850 | comp: 0.333, data: 1.768 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.505 D: 0.153 pix2pix: 1.484 
+[2025-02-27 21:06:43][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11880 | comp: 0.333, data: 1.645 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.530 D: 0.282 pix2pix: 1.995 
+[2025-02-27 21:07:56][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11910 | comp: 0.333, data: 1.603 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.500 D: 0.419 pix2pix: 1.436 
+[2025-02-27 21:09:06][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11940 | comp: 0.333, data: 1.740 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.509 D: 0.198 pix2pix: 2.939 
+[2025-02-27 21:10:16][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 11970 | comp: 0.332, data: 1.716 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.975 D: 0.056 pix2pix: 2.531 
+[2025-02-27 21:11:28][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12000 | comp: 0.332, data: 1.823 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.034 D: 0.465 pix2pix: 1.065 
+[2025-02-27 21:11:28][ganslate.engines.trainer][INFO] - Saving the model after 12000 iterations.
+[2025-02-27 21:11:35][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-27 21:18:27][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 12000) --------------------
+ssim: 0.783 mse: 10218.225 nmse: 0.223 psnr: 28.825 mae: 37.174 ssim_clean_mask: 0.891 mse_clean_mask: 18951.970 nmse_clean_mask: 0.177 psnr_clean_mask: 30.011 mae_clean_mask: 54.162 
+[2025-02-27 21:19:38][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12030 | comp: 0.332, data: 1.503 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.885 D: 0.371 pix2pix: 1.695 
+[2025-02-27 21:20:47][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12060 | comp: 0.334, data: 1.522 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.613 D: 0.114 pix2pix: 2.530 
+[2025-02-27 21:21:58][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12090 | comp: 0.333, data: 1.904 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.775 D: 0.077 pix2pix: 1.163 
+[2025-02-27 21:23:08][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12120 | comp: 0.335, data: 1.605 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.316 D: 0.271 pix2pix: 1.845 
+[2025-02-27 21:24:19][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12150 | comp: 0.334, data: 1.592 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.619 D: 0.427 pix2pix: 2.592 
+[2025-02-27 21:25:31][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12180 | comp: 0.332, data: 1.486 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.719 D: 0.108 pix2pix: 1.387 
+[2025-02-27 21:26:41][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12210 | comp: 0.334, data: 1.537 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.412 D: 0.171 pix2pix: 1.812 
+[2025-02-27 21:27:53][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12240 | comp: 0.332, data: 1.621 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.548 D: 0.550 pix2pix: 1.876 
+[2025-02-27 21:29:02][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12270 | comp: 0.332, data: 1.725 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.905 D: 0.545 pix2pix: 1.802 
+[2025-02-27 21:30:13][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12300 | comp: 0.333, data: 1.355 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.358 D: 0.220 pix2pix: 2.550 
+[2025-02-27 21:31:24][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12330 | comp: 0.330, data: 1.755 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.554 D: 0.439 pix2pix: 1.095 
+[2025-02-27 21:32:34][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12360 | comp: 0.334, data: 1.738 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.404 D: 0.246 pix2pix: 2.166 
+[2025-02-27 21:33:41][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12390 | comp: 0.332, data: 1.480 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.452 D: 0.395 pix2pix: 1.296 
+[2025-02-27 21:34:47][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12420 | comp: 0.333, data: 1.357 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.709 D: 0.408 pix2pix: 1.476 
+[2025-02-27 21:35:54][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12450 | comp: 0.335, data: 1.272 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.326 D: 0.267 pix2pix: 2.588 
+[2025-02-27 21:37:03][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12480 | comp: 0.332, data: 1.392 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.562 D: 0.508 pix2pix: 1.767 
+[2025-02-27 21:38:13][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12510 | comp: 0.334, data: 1.578 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.230 D: 0.325 pix2pix: 1.817 
+[2025-02-27 21:39:24][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12540 | comp: 0.332, data: 2.129 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.416 D: 0.181 pix2pix: 2.169 
+[2025-02-27 21:40:36][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12570 | comp: 0.333, data: 1.557 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.335 D: 0.630 pix2pix: 1.939 
+[2025-02-27 21:41:47][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12600 | comp: 0.335, data: 1.911 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.831 D: 0.209 pix2pix: 1.397 
+[2025-02-27 21:42:59][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12630 | comp: 0.332, data: 2.014 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.240 D: 0.622 pix2pix: 2.296 
+[2025-02-27 21:44:12][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12660 | comp: 0.344, data: 1.213 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.605 D: 0.224 pix2pix: 1.631 
+[2025-02-27 21:45:16][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12690 | comp: 0.333, data: 1.414 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.873 D: 0.091 pix2pix: 1.550 
+[2025-02-27 21:46:24][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12720 | comp: 0.334, data: 1.247 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.683 D: 0.305 pix2pix: 1.267 
+[2025-02-27 21:47:30][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12750 | comp: 0.333, data: 1.542 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.979 D: 0.226 pix2pix: 1.933 
+[2025-02-27 21:48:36][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12780 | comp: 0.332, data: 1.408 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.388 D: 0.436 pix2pix: 1.912 
+[2025-02-27 21:49:39][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12810 | comp: 0.337, data: 1.222 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.360 D: 0.265 pix2pix: 1.832 
+[2025-02-27 21:50:42][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12840 | comp: 0.332, data: 1.444 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.891 D: 0.281 pix2pix: 1.412 
+[2025-02-27 21:51:47][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12870 | comp: 0.332, data: 1.620 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.809 D: 0.284 pix2pix: 2.658 
+[2025-02-27 21:52:49][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12900 | comp: 0.333, data: 1.235 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.767 D: 0.366 pix2pix: 2.158 
+[2025-02-27 21:53:53][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12930 | comp: 0.333, data: 1.565 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.966 D: 0.143 pix2pix: 2.017 
+[2025-02-27 21:54:57][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12960 | comp: 0.335, data: 1.383 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.619 D: 0.167 pix2pix: 1.675 
+[2025-02-27 21:56:02][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 12990 | comp: 0.332, data: 1.800 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.496 D: 0.149 pix2pix: 1.108 
+[2025-02-27 21:57:05][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13020 | comp: 0.334, data: 1.402 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.175 D: 0.081 pix2pix: 1.557 
+[2025-02-27 21:58:10][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13050 | comp: 0.336, data: 1.355 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.476 D: 0.371 pix2pix: 1.772 
+[2025-02-27 21:59:16][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13080 | comp: 0.334, data: 1.571 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.545 D: 0.235 pix2pix: 2.193 
+[2025-02-27 22:00:24][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13110 | comp: 0.332, data: 1.934 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.592 D: 0.265 pix2pix: 1.815 
+[2025-02-27 22:01:33][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13140 | comp: 0.334, data: 1.471 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.618 D: 0.138 pix2pix: 2.235 
+[2025-02-27 22:02:41][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13170 | comp: 0.350, data: 1.203 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.662 D: 0.310 pix2pix: 1.340 
+[2025-02-27 22:03:49][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13200 | comp: 0.333, data: 1.692 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.846 D: 0.076 pix2pix: 1.381 
+[2025-02-27 22:03:49][ganslate.engines.trainer][INFO] - Saving the model after 13200 iterations.
+[2025-02-27 22:03:57][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-27 22:10:45][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 13200) --------------------
+ssim: 0.803 mse: 11459.960 nmse: 0.263 psnr: 28.155 mae: 36.673 ssim_clean_mask: 0.897 mse_clean_mask: 19480.945 nmse_clean_mask: 0.191 psnr_clean_mask: 29.795 mae_clean_mask: 53.187 
+[2025-02-27 22:11:54][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13230 | comp: 0.331, data: 1.847 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.538 D: 0.183 pix2pix: 2.414 
+[2025-02-27 22:13:04][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13260 | comp: 0.333, data: 1.490 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.779 D: 0.325 pix2pix: 2.732 
+[2025-02-27 22:14:12][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13290 | comp: 0.332, data: 1.631 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.416 D: 0.238 pix2pix: 2.552 
+[2025-02-27 22:15:22][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13320 | comp: 0.333, data: 2.053 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.888 D: 0.115 pix2pix: 1.666 
+[2025-02-27 22:16:30][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13350 | comp: 0.335, data: 1.900 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.640 D: 0.100 pix2pix: 1.058 
+[2025-02-27 22:17:40][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13380 | comp: 0.333, data: 2.192 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.518 D: 0.226 pix2pix: 2.254 
+[2025-02-27 22:18:49][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13410 | comp: 0.338, data: 1.219 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.687 D: 0.080 pix2pix: 1.138 
+[2025-02-27 22:19:57][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13440 | comp: 0.333, data: 1.547 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.415 D: 0.195 pix2pix: 3.243 
+[2025-02-27 22:21:05][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13470 | comp: 0.332, data: 1.584 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.973 D: 0.093 pix2pix: 1.844 
+[2025-02-27 22:22:15][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13500 | comp: 0.331, data: 1.526 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.311 D: 0.257 pix2pix: 2.467 
+[2025-02-27 22:23:24][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13530 | comp: 0.332, data: 1.377 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.633 D: 0.270 pix2pix: 1.193 
+[2025-02-27 22:24:31][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13560 | comp: 0.333, data: 1.749 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.480 D: 0.160 pix2pix: 1.324 
+[2025-02-27 22:25:40][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13590 | comp: 0.334, data: 1.376 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.594 D: 0.201 pix2pix: 2.743 
+[2025-02-27 22:26:49][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13620 | comp: 0.333, data: 1.712 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.922 D: 0.119 pix2pix: 2.166 
+[2025-02-27 22:27:58][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13650 | comp: 0.334, data: 1.619 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.667 D: 0.257 pix2pix: 1.065 
+[2025-02-27 22:29:07][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13680 | comp: 0.333, data: 1.509 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.610 D: 0.486 pix2pix: 2.865 
+[2025-02-27 22:30:17][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13710 | comp: 0.332, data: 1.681 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.644 D: 0.489 pix2pix: 1.488 
+[2025-02-27 22:31:24][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13740 | comp: 0.332, data: 1.616 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.762 D: 0.146 pix2pix: 1.696 
+[2025-02-27 22:32:34][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13770 | comp: 0.333, data: 1.504 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.269 D: 0.519 pix2pix: 2.742 
+[2025-02-27 22:33:42][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13800 | comp: 0.333, data: 1.617 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.313 D: 0.543 pix2pix: 1.167 
+[2025-02-27 22:34:51][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13830 | comp: 0.335, data: 1.620 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.837 D: 0.137 pix2pix: 2.137 
+[2025-02-27 22:36:00][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13860 | comp: 0.334, data: 1.347 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.406 D: 0.499 pix2pix: 1.867 
+[2025-02-27 22:37:08][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13890 | comp: 0.333, data: 1.326 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.195 D: 0.417 pix2pix: 2.048 
+[2025-02-27 22:38:17][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13920 | comp: 0.333, data: 1.538 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.499 D: 0.318 pix2pix: 1.304 
+[2025-02-27 22:39:27][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13950 | comp: 0.333, data: 1.248 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.431 D: 0.242 pix2pix: 2.211 
+[2025-02-27 22:40:36][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 13980 | comp: 0.332, data: 1.443 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.715 D: 0.474 pix2pix: 2.298 
+[2025-02-27 22:41:49][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14010 | comp: 0.331, data: 1.799 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.688 D: 0.134 pix2pix: 2.360 
+[2025-02-27 22:43:00][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14040 | comp: 0.331, data: 2.017 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.549 D: 0.248 pix2pix: 1.438 
+[2025-02-27 22:44:08][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14070 | comp: 0.331, data: 1.889 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.604 D: 0.509 pix2pix: 1.610 
+[2025-02-27 22:45:18][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14100 | comp: 0.331, data: 1.725 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.541 D: 0.181 pix2pix: 2.448 
+[2025-02-27 22:46:27][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14130 | comp: 0.332, data: 1.565 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.338 D: 0.336 pix2pix: 2.135 
+[2025-02-27 22:47:36][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14160 | comp: 0.332, data: 1.585 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.541 D: 0.121 pix2pix: 2.240 
+[2025-02-27 22:48:45][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14190 | comp: 0.333, data: 1.562 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.708 D: 0.064 pix2pix: 1.727 
+[2025-02-27 22:49:54][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14220 | comp: 0.333, data: 1.686 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.643 D: 0.072 pix2pix: 1.211 
+[2025-02-27 22:51:02][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14250 | comp: 0.334, data: 1.336 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.992 D: 0.312 pix2pix: 1.176 
+[2025-02-27 22:52:12][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14280 | comp: 0.335, data: 1.963 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.237 D: 0.340 pix2pix: 1.660 
+[2025-02-27 22:53:20][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14310 | comp: 0.337, data: 1.334 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.985 D: 0.566 pix2pix: 2.156 
+[2025-02-27 22:54:29][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14340 | comp: 0.336, data: 1.573 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.278 D: 0.557 pix2pix: 1.214 
+[2025-02-27 22:55:39][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14370 | comp: 0.334, data: 1.529 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.535 D: 0.171 pix2pix: 1.657 
+[2025-02-27 22:56:48][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14400 | comp: 0.333, data: 1.518 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.429 D: 0.169 pix2pix: 2.051 
+[2025-02-27 22:56:49][ganslate.engines.trainer][INFO] - Saving the model after 14400 iterations.
+[2025-02-27 22:56:56][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-27 23:03:46][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 14400) --------------------
+ssim: 0.771 mse: 9734.133 nmse: 0.217 psnr: 29.019 mae: 37.232 ssim_clean_mask: 0.887 mse_clean_mask: 17235.133 nmse_clean_mask: 0.165 psnr_clean_mask: 30.375 mae_clean_mask: 52.635 
+[2025-02-27 23:04:56][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14430 | comp: 0.332, data: 2.022 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.656 D: 0.153 pix2pix: 2.011 
+[2025-02-27 23:06:05][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14460 | comp: 0.332, data: 1.843 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.642 D: 0.213 pix2pix: 1.557 
+[2025-02-27 23:07:15][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14490 | comp: 0.333, data: 1.834 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.544 D: 0.223 pix2pix: 1.605 
+[2025-02-27 23:08:26][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14520 | comp: 0.332, data: 1.817 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.793 D: 0.088 pix2pix: 2.014 
+[2025-02-27 23:09:36][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14550 | comp: 0.334, data: 1.660 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.564 D: 0.131 pix2pix: 1.964 
+[2025-02-27 23:10:47][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14580 | comp: 0.332, data: 1.672 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.818 D: 0.122 pix2pix: 2.153 
+[2025-02-27 23:11:58][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14610 | comp: 0.334, data: 1.543 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.945 D: 0.189 pix2pix: 1.467 
+[2025-02-27 23:13:09][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14640 | comp: 0.333, data: 1.485 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.578 D: 0.375 pix2pix: 1.696 
+[2025-02-27 23:14:20][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14670 | comp: 0.334, data: 1.518 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.595 D: 0.120 pix2pix: 2.040 
+[2025-02-27 23:15:30][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14700 | comp: 0.332, data: 1.587 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.607 D: 0.159 pix2pix: 0.978 
+[2025-02-27 23:16:41][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14730 | comp: 0.334, data: 1.686 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.528 D: 0.168 pix2pix: 3.314 
+[2025-02-27 23:17:51][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14760 | comp: 0.333, data: 1.751 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.472 D: 0.133 pix2pix: 1.900 
+[2025-02-27 23:19:02][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14790 | comp: 0.331, data: 2.628 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.766 D: 0.142 pix2pix: 1.666 
+[2025-02-27 23:20:12][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14820 | comp: 0.333, data: 2.036 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.367 D: 0.228 pix2pix: 2.095 
+[2025-02-27 23:21:22][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14850 | comp: 0.333, data: 1.499 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.148 D: 0.508 pix2pix: 3.146 
+[2025-02-27 23:22:33][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14880 | comp: 0.332, data: 1.525 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.028 D: 0.040 pix2pix: 1.329 
+[2025-02-27 23:23:44][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14910 | comp: 0.331, data: 1.597 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.762 D: 0.641 pix2pix: 0.657 
+[2025-02-27 23:24:54][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14940 | comp: 0.332, data: 1.439 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.666 D: 0.750 pix2pix: 1.390 
+[2025-02-27 23:26:05][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 14970 | comp: 0.333, data: 1.495 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.924 D: 0.031 pix2pix: 1.478 
+[2025-02-27 23:27:15][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15000 | comp: 0.332, data: 1.372 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.662 D: 0.105 pix2pix: 2.077 
+[2025-02-27 23:28:24][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15030 | comp: 0.332, data: 1.609 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.848 D: 0.353 pix2pix: 1.834 
+[2025-02-27 23:29:35][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15060 | comp: 0.334, data: 1.613 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.565 D: 0.369 pix2pix: 1.645 
+[2025-02-27 23:30:47][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15090 | comp: 0.334, data: 1.818 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.266 D: 0.279 pix2pix: 1.819 
+[2025-02-27 23:31:57][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15120 | comp: 0.335, data: 1.298 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.545 D: 0.110 pix2pix: 2.236 
+[2025-02-27 23:33:08][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15150 | comp: 0.333, data: 1.650 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.696 D: 0.086 pix2pix: 1.976 
+[2025-02-27 23:34:19][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15180 | comp: 0.335, data: 1.387 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.648 D: 0.097 pix2pix: 1.301 
+[2025-02-27 23:35:30][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15210 | comp: 0.333, data: 1.582 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.818 D: 0.145 pix2pix: 2.237 
+[2025-02-27 23:36:40][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15240 | comp: 0.331, data: 1.545 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.487 D: 0.257 pix2pix: 1.152 
+[2025-02-27 23:37:51][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15270 | comp: 0.333, data: 1.604 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.554 D: 0.268 pix2pix: 1.557 
+[2025-02-27 23:39:02][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15300 | comp: 0.330, data: 1.678 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.701 D: 0.101 pix2pix: 1.140 
+[2025-02-27 23:40:15][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15330 | comp: 0.332, data: 1.695 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.741 D: 0.638 pix2pix: 2.165 
+[2025-02-27 23:41:25][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15360 | comp: 0.334, data: 1.731 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.379 D: 0.255 pix2pix: 1.457 
+[2025-02-27 23:42:34][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15390 | comp: 0.331, data: 1.945 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.644 D: 0.112 pix2pix: 1.310 
+[2025-02-27 23:43:46][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15420 | comp: 0.333, data: 1.757 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.359 D: 0.281 pix2pix: 1.370 
+[2025-02-27 23:44:57][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15450 | comp: 0.332, data: 1.684 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.932 D: 0.229 pix2pix: 1.912 
+[2025-02-27 23:46:08][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15480 | comp: 0.333, data: 1.519 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.957 D: 0.250 pix2pix: 2.022 
+[2025-02-27 23:47:19][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15510 | comp: 0.333, data: 1.552 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.468 D: 0.179 pix2pix: 2.558 
+[2025-02-27 23:48:31][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15540 | comp: 0.333, data: 2.051 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.429 D: 0.172 pix2pix: 2.324 
+[2025-02-27 23:49:41][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15570 | comp: 0.333, data: 1.315 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.573 D: 0.157 pix2pix: 1.621 
+[2025-02-27 23:50:53][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15600 | comp: 0.332, data: 1.321 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.766 D: 0.039 pix2pix: 2.039 
+[2025-02-27 23:50:53][ganslate.engines.trainer][INFO] - Saving the model after 15600 iterations.
+[2025-02-27 23:51:00][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-27 23:57:51][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 15600) --------------------
+ssim: 0.793 mse: 9822.097 nmse: 0.219 psnr: 28.954 mae: 36.257 ssim_clean_mask: 0.895 mse_clean_mask: 17553.994 nmse_clean_mask: 0.167 psnr_clean_mask: 30.267 mae_clean_mask: 52.155 
+[2025-02-27 23:59:03][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15630 | comp: 0.331, data: 1.583 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.643 D: 0.079 pix2pix: 2.157 
+[2025-02-28 00:00:13][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15660 | comp: 0.383, data: 1.127 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.247 D: 0.315 pix2pix: 2.680 
+[2025-02-28 00:01:25][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15690 | comp: 0.332, data: 1.547 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.034 D: 0.420 pix2pix: 1.060 
+[2025-02-28 00:02:34][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15720 | comp: 0.334, data: 1.586 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.027 D: 0.040 pix2pix: 1.403 
+[2025-02-28 00:03:44][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15750 | comp: 0.332, data: 1.796 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.112 D: 0.100 pix2pix: 1.515 
+[2025-02-28 00:04:55][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15780 | comp: 0.332, data: 1.578 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.697 D: 0.075 pix2pix: 1.605 
+[2025-02-28 00:06:06][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15810 | comp: 0.332, data: 2.049 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.583 D: 0.166 pix2pix: 1.944 
+[2025-02-28 00:07:15][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15840 | comp: 0.334, data: 1.444 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.501 D: 0.170 pix2pix: 1.055 
+[2025-02-28 00:08:25][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15870 | comp: 0.332, data: 1.687 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.660 D: 0.181 pix2pix: 1.375 
+[2025-02-28 00:09:35][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15900 | comp: 0.333, data: 1.962 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.142 D: 0.070 pix2pix: 1.636 
+[2025-02-28 00:10:45][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15930 | comp: 0.333, data: 1.498 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.400 D: 0.230 pix2pix: 2.147 
+[2025-02-28 00:11:56][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15960 | comp: 0.332, data: 1.488 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.508 D: 0.178 pix2pix: 2.340 
+[2025-02-28 00:13:07][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 15990 | comp: 0.334, data: 1.250 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.656 D: 0.243 pix2pix: 2.724 
+[2025-02-28 00:14:17][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16020 | comp: 0.332, data: 1.731 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.518 D: 0.116 pix2pix: 2.083 
+[2025-02-28 00:15:27][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16050 | comp: 0.334, data: 1.254 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.787 D: 0.258 pix2pix: 1.687 
+[2025-02-28 00:16:37][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16080 | comp: 0.332, data: 1.511 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.604 D: 0.294 pix2pix: 1.227 
+[2025-02-28 00:17:46][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16110 | comp: 0.332, data: 1.601 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.190 D: 0.451 pix2pix: 0.982 
+[2025-02-28 00:18:57][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16140 | comp: 0.332, data: 2.085 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.845 D: 0.072 pix2pix: 1.461 
+[2025-02-28 00:20:07][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16170 | comp: 0.332, data: 1.461 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.471 D: 0.212 pix2pix: 1.896 
+[2025-02-28 00:21:18][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16200 | comp: 0.332, data: 1.489 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.841 D: 0.262 pix2pix: 1.364 
+[2025-02-28 00:22:29][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16230 | comp: 0.333, data: 1.706 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.005 D: 0.953 pix2pix: 1.358 
+[2025-02-28 00:23:40][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16260 | comp: 0.333, data: 1.620 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.432 D: 0.170 pix2pix: 1.340 
+[2025-02-28 00:24:50][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16290 | comp: 0.332, data: 1.629 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.869 D: 0.431 pix2pix: 1.001 
+[2025-02-28 00:26:01][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16320 | comp: 0.332, data: 1.587 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.643 D: 0.247 pix2pix: 1.929 
+[2025-02-28 00:27:12][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16350 | comp: 0.333, data: 1.649 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.154 D: 0.053 pix2pix: 1.208 
+[2025-02-28 00:28:24][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16380 | comp: 0.333, data: 1.843 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.778 D: 0.563 pix2pix: 1.234 
+[2025-02-28 00:29:35][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16410 | comp: 0.334, data: 1.395 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.486 D: 0.140 pix2pix: 1.788 
+[2025-02-28 00:30:47][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16440 | comp: 0.332, data: 1.676 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.778 D: 0.626 pix2pix: 0.996 
+[2025-02-28 00:31:57][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16470 | comp: 0.333, data: 1.743 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.612 D: 0.088 pix2pix: 2.189 
+[2025-02-28 00:33:09][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16500 | comp: 0.333, data: 1.628 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.762 D: 0.242 pix2pix: 1.186 
+[2025-02-28 00:34:20][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16530 | comp: 0.330, data: 1.767 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.706 D: 0.169 pix2pix: 1.009 
+[2025-02-28 00:35:30][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16560 | comp: 0.334, data: 1.467 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.016 D: 0.467 pix2pix: 1.421 
+[2025-02-28 00:36:41][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16590 | comp: 0.331, data: 1.343 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.702 D: 0.095 pix2pix: 2.210 
+[2025-02-28 00:37:52][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16620 | comp: 0.331, data: 1.801 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.600 D: 0.150 pix2pix: 1.850 
+[2025-02-28 00:39:04][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16650 | comp: 0.333, data: 1.421 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.459 D: 0.320 pix2pix: 1.371 
+[2025-02-28 00:40:16][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16680 | comp: 0.333, data: 1.783 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.535 D: 0.396 pix2pix: 1.538 
+[2025-02-28 00:41:27][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16710 | comp: 0.332, data: 1.776 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.697 D: 0.077 pix2pix: 1.618 
+[2025-02-28 00:42:38][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16740 | comp: 0.333, data: 1.579 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.737 D: 0.060 pix2pix: 2.025 
+[2025-02-28 00:43:49][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16770 | comp: 0.333, data: 1.635 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.424 D: 0.159 pix2pix: 1.824 
+[2025-02-28 00:45:01][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16800 | comp: 0.333, data: 1.702 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.218 D: 0.060 pix2pix: 1.229 
+[2025-02-28 00:45:01][ganslate.engines.trainer][INFO] - Saving the model after 16800 iterations.
+[2025-02-28 00:45:08][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-28 00:52:00][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 16800) --------------------
+ssim: 0.803 mse: 9804.273 nmse: 0.219 psnr: 28.974 mae: 35.243 ssim_clean_mask: 0.898 mse_clean_mask: 17571.762 nmse_clean_mask: 0.168 psnr_clean_mask: 30.293 mae_clean_mask: 50.664 
+[2025-02-28 00:53:13][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16830 | comp: 0.332, data: 1.784 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.716 D: 0.049 pix2pix: 1.837 
+[2025-02-28 00:54:23][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16860 | comp: 0.331, data: 1.808 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.598 D: 0.162 pix2pix: 1.488 
+[2025-02-28 00:55:34][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16890 | comp: 0.333, data: 1.706 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.928 D: 0.174 pix2pix: 1.435 
+[2025-02-28 00:56:46][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16920 | comp: 0.331, data: 2.270 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.667 D: 0.107 pix2pix: 1.710 
+[2025-02-28 00:57:55][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16950 | comp: 0.333, data: 1.488 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.097 D: 0.031 pix2pix: 1.686 
+[2025-02-28 00:59:08][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 16980 | comp: 0.333, data: 1.612 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.632 D: 0.095 pix2pix: 1.742 
+[2025-02-28 01:00:19][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17010 | comp: 0.333, data: 2.232 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.935 D: 0.023 pix2pix: 1.001 
+[2025-02-28 01:01:31][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17040 | comp: 0.335, data: 1.594 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.852 D: 0.134 pix2pix: 1.447 
+[2025-02-28 01:02:43][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17070 | comp: 0.333, data: 1.639 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.666 D: 0.259 pix2pix: 1.749 
+[2025-02-28 01:03:55][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17100 | comp: 0.333, data: 1.677 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.475 D: 0.218 pix2pix: 2.415 
+[2025-02-28 01:05:07][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17130 | comp: 0.331, data: 1.463 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.626 D: 0.091 pix2pix: 1.241 
+[2025-02-28 01:06:19][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17160 | comp: 0.331, data: 1.617 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.595 D: 0.280 pix2pix: 1.336 
+[2025-02-28 01:07:31][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17190 | comp: 0.333, data: 1.595 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.197 D: 0.887 pix2pix: 2.159 
+[2025-02-28 01:08:43][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17220 | comp: 0.333, data: 1.406 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.645 D: 0.084 pix2pix: 1.840 
+[2025-02-28 01:09:55][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17250 | comp: 0.333, data: 1.408 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.146 D: 0.561 pix2pix: 2.386 
+[2025-02-28 01:11:07][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17280 | comp: 0.333, data: 1.795 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.413 D: 0.210 pix2pix: 1.909 
+[2025-02-28 01:12:18][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17310 | comp: 0.333, data: 1.613 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.528 D: 0.158 pix2pix: 1.382 
+[2025-02-28 01:13:29][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17340 | comp: 0.333, data: 1.751 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.601 D: 0.131 pix2pix: 1.712 
+[2025-02-28 01:14:40][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17370 | comp: 0.332, data: 2.092 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.731 D: 0.282 pix2pix: 1.106 
+[2025-02-28 01:15:51][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17400 | comp: 0.333, data: 1.412 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.277 D: 0.320 pix2pix: 2.115 
+[2025-02-28 01:17:03][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17430 | comp: 0.334, data: 1.592 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.621 D: 0.134 pix2pix: 1.026 
+[2025-02-28 01:18:13][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17460 | comp: 0.334, data: 1.743 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.757 D: 0.350 pix2pix: 0.984 
+[2025-02-28 01:19:23][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17490 | comp: 0.334, data: 1.417 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.693 D: 0.198 pix2pix: 1.951 
+[2025-02-28 01:20:34][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17520 | comp: 0.336, data: 1.882 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.927 D: 0.071 pix2pix: 2.011 
+[2025-02-28 01:21:43][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17550 | comp: 0.334, data: 1.555 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.110 D: 0.065 pix2pix: 1.540 
+[2025-02-28 01:22:56][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17580 | comp: 0.334, data: 1.769 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.436 D: 0.231 pix2pix: 1.138 
+[2025-02-28 01:24:08][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17610 | comp: 0.332, data: 1.574 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.597 D: 0.176 pix2pix: 1.518 
+[2025-02-28 01:25:18][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17640 | comp: 0.335, data: 1.697 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.443 D: 0.154 pix2pix: 2.189 
+[2025-02-28 01:26:29][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17670 | comp: 0.333, data: 1.732 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.660 D: 0.113 pix2pix: 1.993 
+[2025-02-28 01:27:39][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17700 | comp: 0.331, data: 1.642 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.378 D: 0.391 pix2pix: 1.637 
+[2025-02-28 01:28:50][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17730 | comp: 0.332, data: 1.779 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.583 D: 0.182 pix2pix: 2.104 
+[2025-02-28 01:30:01][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17760 | comp: 0.333, data: 1.448 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.722 D: 0.148 pix2pix: 1.737 
+[2025-02-28 01:31:13][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17790 | comp: 0.332, data: 1.585 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.428 D: 0.160 pix2pix: 1.899 
+[2025-02-28 01:32:22][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17820 | comp: 0.333, data: 1.298 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.835 D: 0.100 pix2pix: 1.609 
+[2025-02-28 01:33:31][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17850 | comp: 0.333, data: 1.663 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.730 D: 0.135 pix2pix: 2.353 
+[2025-02-28 01:34:42][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17880 | comp: 0.334, data: 1.632 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.871 D: 0.070 pix2pix: 2.048 
+[2025-02-28 01:35:53][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17910 | comp: 0.331, data: 1.507 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.890 D: 0.049 pix2pix: 1.496 
+[2025-02-28 01:37:03][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17940 | comp: 0.333, data: 1.586 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.462 D: 0.346 pix2pix: 1.980 
+[2025-02-28 01:38:14][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 17970 | comp: 0.333, data: 1.553 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.632 D: 0.110 pix2pix: 2.512 
+[2025-02-28 01:39:24][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18000 | comp: 0.336, data: 1.716 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.489 D: 0.226 pix2pix: 1.849 
+[2025-02-28 01:39:25][ganslate.engines.trainer][INFO] - Saving the model after 18000 iterations.
+[2025-02-28 01:39:32][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-28 01:46:27][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 18000) --------------------
+ssim: 0.756 mse: 9445.839 nmse: 0.207 psnr: 29.208 mae: 38.687 ssim_clean_mask: 0.881 mse_clean_mask: 16328.912 nmse_clean_mask: 0.153 psnr_clean_mask: 30.707 mae_clean_mask: 54.271 
+[2025-02-28 01:48:14][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18030 | comp: 0.328, data: 2.917 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.476 D: 0.827 pix2pix: 1.534 
+[2025-02-28 01:49:58][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18060 | comp: 0.331, data: 1.322 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.511 D: 0.293 pix2pix: 2.185 
+[2025-02-28 01:51:08][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18090 | comp: 0.331, data: 1.983 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.701 D: 0.149 pix2pix: 1.586 
+[2025-02-28 01:52:18][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18120 | comp: 0.332, data: 1.912 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.511 D: 0.123 pix2pix: 2.494 
+[2025-02-28 01:53:30][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18150 | comp: 0.334, data: 1.811 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.794 D: 0.045 pix2pix: 1.158 
+[2025-02-28 01:54:40][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18180 | comp: 0.333, data: 1.376 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.628 D: 0.106 pix2pix: 1.455 
+[2025-02-28 01:55:51][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18210 | comp: 0.332, data: 2.286 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.124 D: 0.138 pix2pix: 2.177 
+[2025-02-28 01:57:03][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18240 | comp: 0.334, data: 1.667 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.964 D: 0.431 pix2pix: 1.671 
+[2025-02-28 01:58:15][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18270 | comp: 0.335, data: 1.658 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.676 D: 0.086 pix2pix: 2.411 
+[2025-02-28 01:59:26][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18300 | comp: 0.334, data: 1.491 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.464 D: 0.251 pix2pix: 1.584 
+[2025-02-28 02:00:37][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18330 | comp: 0.333, data: 1.642 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.170 D: 0.577 pix2pix: 1.757 
+[2025-02-28 02:01:49][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18360 | comp: 0.334, data: 1.636 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.319 D: 0.716 pix2pix: 1.887 
+[2025-02-28 02:02:59][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18390 | comp: 0.331, data: 1.488 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.721 D: 0.298 pix2pix: 1.255 
+[2025-02-28 02:04:10][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18420 | comp: 0.334, data: 1.550 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.604 D: 0.126 pix2pix: 2.222 
+[2025-02-28 02:05:22][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18450 | comp: 0.333, data: 1.372 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.459 D: 0.139 pix2pix: 2.596 
+[2025-02-28 02:06:31][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18480 | comp: 0.332, data: 1.702 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.794 D: 0.146 pix2pix: 2.659 
+[2025-02-28 02:07:42][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18510 | comp: 0.331, data: 1.459 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.677 D: 0.142 pix2pix: 2.051 
+[2025-02-28 02:08:53][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18540 | comp: 0.331, data: 2.158 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.447 D: 0.218 pix2pix: 2.294 
+[2025-02-28 02:10:04][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18570 | comp: 0.332, data: 1.415 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.251 D: 0.058 pix2pix: 1.966 
+[2025-02-28 02:11:14][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18600 | comp: 0.331, data: 2.016 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.739 D: 0.093 pix2pix: 1.198 
+[2025-02-28 02:12:24][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18630 | comp: 0.333, data: 1.649 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.758 D: 0.130 pix2pix: 1.659 
+[2025-02-28 02:13:35][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18660 | comp: 0.333, data: 1.740 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.674 D: 0.388 pix2pix: 2.482 
+[2025-02-28 02:14:46][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18690 | comp: 0.333, data: 1.722 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.533 D: 0.199 pix2pix: 2.002 
+[2025-02-28 02:15:57][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18720 | comp: 0.332, data: 1.888 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.880 D: 0.190 pix2pix: 2.002 
+[2025-02-28 02:17:07][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18750 | comp: 0.334, data: 1.491 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.692 D: 0.154 pix2pix: 2.096 
+[2025-02-28 02:18:20][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18780 | comp: 0.335, data: 1.658 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.732 D: 0.089 pix2pix: 1.743 
+[2025-02-28 02:19:33][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18810 | comp: 0.332, data: 1.629 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.720 D: 0.436 pix2pix: 0.795 
+[2025-02-28 02:20:43][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18840 | comp: 0.334, data: 2.002 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.356 D: 0.292 pix2pix: 2.602 
+[2025-02-28 02:21:54][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18870 | comp: 0.332, data: 1.571 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.749 D: 0.185 pix2pix: 1.831 
+[2025-02-28 02:23:07][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18900 | comp: 0.332, data: 1.615 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.773 D: 0.359 pix2pix: 1.915 
+[2025-02-28 02:24:19][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18930 | comp: 0.333, data: 1.453 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.796 D: 0.053 pix2pix: 1.691 
+[2025-02-28 02:25:29][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18960 | comp: 0.333, data: 1.988 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.958 D: 0.044 pix2pix: 1.670 
+[2025-02-28 02:26:39][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 18990 | comp: 0.331, data: 1.687 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.231 D: 0.124 pix2pix: 1.334 
+[2025-02-28 02:27:51][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19020 | comp: 0.332, data: 1.570 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.645 D: 0.080 pix2pix: 1.814 
+[2025-02-28 02:29:01][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19050 | comp: 0.331, data: 1.555 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.182 D: 0.024 pix2pix: 0.750 
+[2025-02-28 02:30:13][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19080 | comp: 0.332, data: 2.190 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.085 D: 0.131 pix2pix: 1.219 
+[2025-02-28 02:31:26][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19110 | comp: 0.332, data: 1.670 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.639 D: 0.312 pix2pix: 1.820 
+[2025-02-28 02:32:36][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19140 | comp: 0.332, data: 2.086 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.629 D: 0.347 pix2pix: 1.404 
+[2025-02-28 02:33:45][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19170 | comp: 0.334, data: 1.634 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.567 D: 0.129 pix2pix: 3.014 
+[2025-02-28 02:34:58][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19200 | comp: 0.334, data: 1.697 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.499 D: 0.179 pix2pix: 2.708 
+[2025-02-28 02:34:59][ganslate.engines.trainer][INFO] - Saving the model after 19200 iterations.
+[2025-02-28 02:35:05][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-28 02:42:06][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 19200) --------------------
+ssim: 0.709 mse: 10333.056 nmse: 0.233 psnr: 28.653 mae: 42.358 ssim_clean_mask: 0.865 mse_clean_mask: 18657.700 nmse_clean_mask: 0.182 psnr_clean_mask: 29.927 mae_clean_mask: 59.870 
+[2025-02-28 02:43:18][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19230 | comp: 0.332, data: 1.661 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.933 D: 0.200 pix2pix: 1.473 
+[2025-02-28 02:44:29][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19260 | comp: 0.331, data: 2.154 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.902 D: 0.063 pix2pix: 1.374 
+[2025-02-28 02:45:39][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19290 | comp: 0.332, data: 1.235 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.745 D: 0.547 pix2pix: 1.660 
+[2025-02-28 02:46:52][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19320 | comp: 0.332, data: 2.151 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.132 D: 0.485 pix2pix: 2.257 
+[2025-02-28 02:48:03][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19350 | comp: 0.336, data: 1.641 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.427 D: 0.275 pix2pix: 1.697 
+[2025-02-28 02:49:15][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19380 | comp: 0.333, data: 1.250 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.625 D: 0.174 pix2pix: 2.373 
+[2025-02-28 02:50:26][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19410 | comp: 0.332, data: 1.840 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.947 D: 0.177 pix2pix: 1.941 
+[2025-02-28 02:51:37][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19440 | comp: 0.335, data: 1.715 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.701 D: 0.119 pix2pix: 2.230 
+[2025-02-28 02:52:48][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19470 | comp: 0.333, data: 2.234 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.155 D: 0.583 pix2pix: 1.759 
+[2025-02-28 02:53:59][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19500 | comp: 0.333, data: 1.568 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.855 D: 0.113 pix2pix: 2.195 
+[2025-02-28 02:55:08][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19530 | comp: 0.333, data: 1.760 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.588 D: 0.132 pix2pix: 1.190 
+[2025-02-28 02:56:21][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19560 | comp: 0.333, data: 1.676 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.787 D: 0.066 pix2pix: 0.969 
+[2025-02-28 02:57:30][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19590 | comp: 0.332, data: 1.558 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.162 D: 0.442 pix2pix: 2.078 
+[2025-02-28 02:58:42][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19620 | comp: 0.350, data: 1.194 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.266 D: 0.041 pix2pix: 1.817 
+[2025-02-28 02:59:54][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19650 | comp: 0.332, data: 1.973 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.057 D: 0.676 pix2pix: 1.455 
+[2025-02-28 03:01:02][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19680 | comp: 0.332, data: 1.526 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.976 D: 0.140 pix2pix: 1.818 
+[2025-02-28 03:02:12][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19710 | comp: 0.331, data: 1.775 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.794 D: 0.323 pix2pix: 0.926 
+[2025-02-28 03:03:23][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19740 | comp: 0.332, data: 1.619 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.785 D: 0.041 pix2pix: 1.434 
+[2025-02-28 03:04:33][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19770 | comp: 0.332, data: 1.809 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.341 D: 0.789 pix2pix: 1.455 
+[2025-02-28 03:05:45][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19800 | comp: 0.332, data: 1.577 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.464 D: 0.230 pix2pix: 3.049 
+[2025-02-28 03:06:55][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19830 | comp: 0.333, data: 1.552 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.144 D: 0.070 pix2pix: 1.650 
+[2025-02-28 03:08:06][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19860 | comp: 0.334, data: 1.574 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.798 D: 0.315 pix2pix: 0.964 
+[2025-02-28 03:09:17][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19890 | comp: 0.333, data: 1.672 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.513 D: 0.271 pix2pix: 1.144 
+[2025-02-28 03:10:29][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19920 | comp: 0.333, data: 1.954 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.119 D: 0.463 pix2pix: 1.808 
+[2025-02-28 03:11:41][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19950 | comp: 0.333, data: 1.569 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.676 D: 0.070 pix2pix: 0.838 
+[2025-02-28 03:12:51][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 19980 | comp: 0.335, data: 1.664 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.843 D: 0.071 pix2pix: 1.311 
+[2025-02-28 03:14:03][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20010 | comp: 0.331, data: 1.560 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.440 D: 0.455 pix2pix: 1.528 
+[2025-02-28 03:15:15][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20040 | comp: 0.332, data: 1.648 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.944 D: 0.054 pix2pix: 1.203 
+[2025-02-28 03:16:27][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20070 | comp: 0.334, data: 1.568 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.322 D: 0.040 pix2pix: 1.113 
+[2025-02-28 03:17:39][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20100 | comp: 0.331, data: 1.273 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.559 D: 0.230 pix2pix: 1.839 
+[2025-02-28 03:18:50][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20130 | comp: 0.333, data: 1.658 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.771 D: 0.044 pix2pix: 1.442 
+[2025-02-28 03:20:01][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20160 | comp: 0.332, data: 1.328 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.551 D: 0.141 pix2pix: 0.965 
+[2025-02-28 03:21:12][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20190 | comp: 0.333, data: 1.339 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.900 D: 0.158 pix2pix: 1.423 
+[2025-02-28 03:22:23][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20220 | comp: 0.334, data: 1.832 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.481 D: 0.147 pix2pix: 1.937 
+[2025-02-28 03:23:36][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20250 | comp: 0.334, data: 2.148 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.231 D: 0.320 pix2pix: 2.212 
+[2025-02-28 03:24:47][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20280 | comp: 0.336, data: 1.694 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.800 D: 0.073 pix2pix: 2.082 
+[2025-02-28 03:25:59][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20310 | comp: 0.334, data: 1.612 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.570 D: 0.204 pix2pix: 1.886 
+[2025-02-28 03:27:10][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20340 | comp: 0.334, data: 1.569 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.681 D: 0.065 pix2pix: 1.685 
+[2025-02-28 03:28:21][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20370 | comp: 0.333, data: 1.825 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.786 D: 0.292 pix2pix: 1.399 
+[2025-02-28 03:29:32][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20400 | comp: 0.332, data: 1.679 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.778 D: 0.074 pix2pix: 1.242 
+[2025-02-28 03:29:32][ganslate.engines.trainer][INFO] - Saving the model after 20400 iterations.
+[2025-02-28 03:29:39][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-28 03:36:31][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 20400) --------------------
+ssim: 0.787 mse: 9402.720 nmse: 0.209 psnr: 29.127 mae: 35.477 ssim_clean_mask: 0.889 mse_clean_mask: 16395.803 nmse_clean_mask: 0.156 psnr_clean_mask: 30.647 mae_clean_mask: 50.557 
+[2025-02-28 03:37:42][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20430 | comp: 0.332, data: 1.766 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.942 D: 0.284 pix2pix: 2.253 
+[2025-02-28 03:38:52][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20460 | comp: 0.333, data: 1.656 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.553 D: 0.124 pix2pix: 1.493 
+[2025-02-28 03:40:03][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20490 | comp: 0.332, data: 2.428 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.781 D: 0.056 pix2pix: 1.951 
+[2025-02-28 03:41:12][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20520 | comp: 0.333, data: 1.827 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.663 D: 0.084 pix2pix: 1.560 
+[2025-02-28 03:42:22][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20550 | comp: 0.333, data: 1.529 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.314 D: 0.254 pix2pix: 2.144 
+[2025-02-28 03:43:34][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20580 | comp: 0.333, data: 1.950 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.106 D: 0.674 pix2pix: 1.173 
+[2025-02-28 03:44:42][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20610 | comp: 0.335, data: 1.589 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.773 D: 0.125 pix2pix: 1.086 
+[2025-02-28 03:45:54][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20640 | comp: 0.332, data: 1.734 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.925 D: 0.136 pix2pix: 2.123 
+[2025-02-28 03:47:04][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20670 | comp: 0.334, data: 1.635 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.175 D: 0.269 pix2pix: 1.256 
+[2025-02-28 03:48:15][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20700 | comp: 0.333, data: 1.564 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.764 D: 0.114 pix2pix: 1.449 
+[2025-02-28 03:49:26][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20730 | comp: 0.332, data: 1.718 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.727 D: 0.047 pix2pix: 1.159 
+[2025-02-28 03:50:35][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20760 | comp: 0.332, data: 1.344 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.601 D: 0.174 pix2pix: 2.056 
+[2025-02-28 03:51:45][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20790 | comp: 0.332, data: 1.869 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.524 D: 0.118 pix2pix: 2.535 
+[2025-02-28 03:52:56][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20820 | comp: 0.332, data: 1.677 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.774 D: 0.065 pix2pix: 1.352 
+[2025-02-28 03:54:07][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20850 | comp: 0.331, data: 1.490 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.543 D: 0.118 pix2pix: 1.075 
+[2025-02-28 03:55:21][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20880 | comp: 0.332, data: 1.642 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.734 D: 0.058 pix2pix: 1.869 
+[2025-02-28 03:56:31][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20910 | comp: 0.332, data: 1.750 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.766 D: 0.063 pix2pix: 0.769 
+[2025-02-28 03:57:44][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20940 | comp: 0.331, data: 1.699 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.866 D: 0.077 pix2pix: 1.694 
+[2025-02-28 03:58:56][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 20970 | comp: 0.332, data: 1.442 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.107 D: 0.028 pix2pix: 1.365 
+[2025-02-28 04:00:06][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21000 | comp: 0.334, data: 1.736 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.033 D: 0.143 pix2pix: 1.574 
+[2025-02-28 04:01:18][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21030 | comp: 0.332, data: 1.668 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.614 D: 0.109 pix2pix: 1.144 
+[2025-02-28 04:02:28][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21060 | comp: 0.335, data: 1.680 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.813 D: 0.218 pix2pix: 1.552 
+[2025-02-28 04:03:40][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21090 | comp: 0.334, data: 1.585 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.593 D: 0.133 pix2pix: 1.409 
+[2025-02-28 04:04:53][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21120 | comp: 0.333, data: 1.680 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.628 D: 0.087 pix2pix: 1.069 
+[2025-02-28 04:06:08][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21150 | comp: 0.332, data: 2.173 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.145 D: 0.176 pix2pix: 2.098 
+[2025-02-28 04:07:19][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21180 | comp: 0.331, data: 1.505 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.526 D: 0.796 pix2pix: 2.195 
+[2025-02-28 04:08:32][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21210 | comp: 0.331, data: 1.972 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.831 D: 0.026 pix2pix: 1.538 
+[2025-02-28 04:09:45][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21240 | comp: 0.331, data: 1.775 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.428 D: 0.155 pix2pix: 2.982 
+[2025-02-28 04:10:57][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21270 | comp: 0.331, data: 1.391 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.184 D: 0.402 pix2pix: 2.558 
+[2025-02-28 04:12:12][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21300 | comp: 0.333, data: 1.665 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.347 D: 0.223 pix2pix: 1.868 
+[2025-02-28 04:13:25][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21330 | comp: 0.331, data: 1.685 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.963 D: 0.243 pix2pix: 1.979 
+[2025-02-28 04:14:39][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21360 | comp: 0.333, data: 1.648 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.456 D: 0.817 pix2pix: 1.386 
+[2025-02-28 04:15:51][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21390 | comp: 0.332, data: 1.563 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.985 D: 0.343 pix2pix: 2.148 
+[2025-02-28 04:17:06][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21420 | comp: 0.330, data: 1.793 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.482 D: 0.633 pix2pix: 1.251 
+[2025-02-28 04:18:19][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21450 | comp: 0.332, data: 1.928 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.103 D: 0.035 pix2pix: 1.456 
+[2025-02-28 04:19:33][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21480 | comp: 0.334, data: 1.697 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.882 D: 0.027 pix2pix: 1.163 
+[2025-02-28 04:20:45][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21510 | comp: 0.333, data: 1.720 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.716 D: 0.135 pix2pix: 1.727 
+[2025-02-28 04:22:00][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21540 | comp: 0.333, data: 1.937 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.883 D: 0.198 pix2pix: 1.373 
+[2025-02-28 04:23:13][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21570 | comp: 0.332, data: 1.882 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.379 D: 0.478 pix2pix: 1.942 
+[2025-02-28 04:24:26][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21600 | comp: 0.334, data: 1.246 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.543 D: 0.250 pix2pix: 1.348 
+[2025-02-28 04:24:26][ganslate.engines.trainer][INFO] - Saving the model after 21600 iterations.
+[2025-02-28 04:24:34][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-28 04:31:28][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 21600) --------------------
+ssim: 0.783 mse: 9716.824 nmse: 0.214 psnr: 29.063 mae: 36.350 ssim_clean_mask: 0.894 mse_clean_mask: 17026.332 nmse_clean_mask: 0.161 psnr_clean_mask: 30.485 mae_clean_mask: 50.699 
+[2025-02-28 04:32:43][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21630 | comp: 0.330, data: 2.019 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.013 D: 0.038 pix2pix: 1.811 
+[2025-02-28 04:33:55][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21660 | comp: 0.332, data: 1.782 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.314 D: 0.305 pix2pix: 1.845 
+[2025-02-28 04:35:08][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21690 | comp: 0.333, data: 2.039 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.421 D: 0.181 pix2pix: 2.528 
+[2025-02-28 04:36:22][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21720 | comp: 0.332, data: 1.797 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.059 D: 0.689 pix2pix: 2.493 
+[2025-02-28 04:37:36][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21750 | comp: 0.331, data: 1.665 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.428 D: 0.327 pix2pix: 1.743 
+[2025-02-28 04:38:49][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21780 | comp: 0.335, data: 1.633 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.308 D: 0.334 pix2pix: 2.004 
+[2025-02-28 04:40:02][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21810 | comp: 0.334, data: 1.933 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.692 D: 0.102 pix2pix: 2.625 
+[2025-02-28 04:41:17][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21840 | comp: 0.334, data: 2.095 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.644 D: 0.082 pix2pix: 1.394 
+[2025-02-28 04:42:30][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21870 | comp: 0.333, data: 1.930 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.706 D: 0.282 pix2pix: 2.505 
+[2025-02-28 04:43:45][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21900 | comp: 0.335, data: 1.721 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.382 D: 0.288 pix2pix: 1.359 
+[2025-02-28 04:44:58][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21930 | comp: 0.332, data: 1.722 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.418 D: 0.190 pix2pix: 2.387 
+[2025-02-28 04:46:12][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21960 | comp: 0.331, data: 1.406 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.749 D: 0.042 pix2pix: 1.057 
+[2025-02-28 04:47:23][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 21990 | comp: 0.331, data: 1.765 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.972 D: 0.020 pix2pix: 1.689 
+[2025-02-28 04:48:36][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22020 | comp: 0.331, data: 1.647 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.500 D: 0.302 pix2pix: 1.509 
+[2025-02-28 04:49:49][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22050 | comp: 0.331, data: 1.775 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.476 D: 0.154 pix2pix: 1.724 
+[2025-02-28 04:51:02][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22080 | comp: 0.332, data: 1.823 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.634 D: 0.441 pix2pix: 2.894 
+[2025-02-28 04:52:16][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22110 | comp: 0.331, data: 1.592 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.112 D: 0.073 pix2pix: 2.152 
+[2025-02-28 04:53:29][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22140 | comp: 0.331, data: 1.691 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.624 D: 0.128 pix2pix: 2.618 
+[2025-02-28 04:54:42][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22170 | comp: 0.331, data: 1.868 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.364 D: 0.358 pix2pix: 2.536 
+[2025-02-28 04:55:54][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22200 | comp: 0.332, data: 1.836 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.572 D: 0.182 pix2pix: 1.568 
+[2025-02-28 04:57:06][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22230 | comp: 0.334, data: 1.863 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.833 D: 0.131 pix2pix: 1.754 
+[2025-02-28 04:58:21][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22260 | comp: 0.333, data: 1.846 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.670 D: 0.090 pix2pix: 1.537 
+[2025-02-28 04:59:35][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22290 | comp: 0.335, data: 1.644 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.760 D: 0.039 pix2pix: 0.867 
+[2025-02-28 05:00:47][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22320 | comp: 0.333, data: 1.748 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.554 D: 0.107 pix2pix: 1.855 
+[2025-02-28 05:01:59][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22350 | comp: 0.332, data: 1.359 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.620 D: 0.172 pix2pix: 2.495 
+[2025-02-28 05:03:12][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22380 | comp: 0.333, data: 1.523 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.669 D: 0.243 pix2pix: 2.091 
+[2025-02-28 05:04:25][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22410 | comp: 0.331, data: 1.470 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.540 D: 0.224 pix2pix: 2.611 
+[2025-02-28 05:05:39][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22440 | comp: 0.332, data: 1.665 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.092 D: 0.246 pix2pix: 1.130 
+[2025-02-28 05:06:52][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22470 | comp: 0.331, data: 1.669 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.395 D: 0.214 pix2pix: 1.399 
+[2025-02-28 05:08:04][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22500 | comp: 0.331, data: 2.015 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.382 D: 0.147 pix2pix: 1.010 
+[2025-02-28 05:09:17][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22530 | comp: 0.333, data: 1.592 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.508 D: 0.122 pix2pix: 1.166 
+[2025-02-28 05:10:30][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22560 | comp: 0.333, data: 1.894 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.633 D: 0.070 pix2pix: 1.224 
+[2025-02-28 05:11:45][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22590 | comp: 0.332, data: 1.695 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.608 D: 0.104 pix2pix: 1.657 
+[2025-02-28 05:12:57][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22620 | comp: 0.333, data: 1.338 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.795 D: 0.054 pix2pix: 1.934 
+[2025-02-28 05:14:11][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22650 | comp: 0.334, data: 1.793 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.448 D: 0.244 pix2pix: 2.117 
+[2025-02-28 05:15:24][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22680 | comp: 0.332, data: 1.762 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.923 D: 0.123 pix2pix: 1.160 
+[2025-02-28 05:16:37][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22710 | comp: 0.336, data: 1.471 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.916 D: 0.047 pix2pix: 1.636 
+[2025-02-28 05:17:52][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22740 | comp: 0.334, data: 1.316 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.868 D: 0.028 pix2pix: 1.345 
+[2025-02-28 05:19:07][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22770 | comp: 0.333, data: 1.965 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.404 D: 0.268 pix2pix: 1.723 
+[2025-02-28 05:20:21][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22800 | comp: 0.333, data: 1.722 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.920 D: 0.058 pix2pix: 1.689 
+[2025-02-28 05:20:21][ganslate.engines.trainer][INFO] - Saving the model after 22800 iterations.
+[2025-02-28 05:20:28][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-28 05:27:22][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 22800) --------------------
+ssim: 0.810 mse: 9039.484 nmse: 0.200 psnr: 29.393 mae: 34.027 ssim_clean_mask: 0.902 mse_clean_mask: 15999.463 nmse_clean_mask: 0.152 psnr_clean_mask: 30.750 mae_clean_mask: 48.311 
+[2025-02-28 05:28:36][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22830 | comp: 0.332, data: 1.890 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.431 D: 0.250 pix2pix: 2.251 
+[2025-02-28 05:29:50][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22860 | comp: 0.334, data: 1.708 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.722 D: 0.188 pix2pix: 1.768 
+[2025-02-28 05:31:03][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22890 | comp: 0.334, data: 1.702 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.928 D: 0.107 pix2pix: 2.032 
+[2025-02-28 05:32:17][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22920 | comp: 0.333, data: 1.369 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.781 D: 0.089 pix2pix: 1.044 
+[2025-02-28 05:33:31][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22950 | comp: 0.333, data: 1.468 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.446 D: 0.140 pix2pix: 1.964 
+[2025-02-28 05:34:44][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 22980 | comp: 0.334, data: 1.747 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.920 D: 0.247 pix2pix: 2.338 
+[2025-02-28 05:35:59][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23010 | comp: 0.334, data: 1.613 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.753 D: 0.357 pix2pix: 0.756 
+[2025-02-28 05:37:13][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23040 | comp: 0.334, data: 1.671 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.367 D: 0.238 pix2pix: 1.899 
+[2025-02-28 05:38:27][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23070 | comp: 0.333, data: 1.471 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.924 D: 0.027 pix2pix: 1.733 
+[2025-02-28 05:39:38][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23100 | comp: 0.332, data: 1.859 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.766 D: 0.127 pix2pix: 2.659 
+[2025-02-28 05:40:51][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23130 | comp: 0.332, data: 1.709 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.957 D: 0.043 pix2pix: 1.133 
+[2025-02-28 05:42:05][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23160 | comp: 0.333, data: 1.738 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.579 D: 0.106 pix2pix: 3.000 
+[2025-02-28 05:43:18][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23190 | comp: 0.331, data: 1.932 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.553 D: 0.511 pix2pix: 2.153 
+[2025-02-28 05:44:32][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23220 | comp: 0.330, data: 1.801 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.592 D: 0.113 pix2pix: 2.428 
+[2025-02-28 05:45:46][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23250 | comp: 0.332, data: 1.732 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.688 D: 0.095 pix2pix: 1.636 
+[2025-02-28 05:47:00][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23280 | comp: 0.331, data: 1.623 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.492 D: 0.116 pix2pix: 1.673 
+[2025-02-28 05:48:13][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23310 | comp: 0.331, data: 1.767 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.563 D: 0.145 pix2pix: 2.480 
+[2025-02-28 05:49:27][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23340 | comp: 0.332, data: 1.768 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.473 D: 0.166 pix2pix: 2.244 
+[2025-02-28 05:50:39][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23370 | comp: 0.333, data: 1.808 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.996 D: 0.204 pix2pix: 1.421 
+[2025-02-28 05:51:53][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23400 | comp: 0.333, data: 2.209 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.944 D: 0.029 pix2pix: 1.174 
+[2025-02-28 05:53:06][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23430 | comp: 0.332, data: 1.597 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.520 D: 0.168 pix2pix: 2.418 
+[2025-02-28 05:54:18][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23460 | comp: 0.332, data: 1.539 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.926 D: 0.243 pix2pix: 2.504 
+[2025-02-28 05:55:33][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23490 | comp: 0.333, data: 1.834 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.144 D: 0.087 pix2pix: 1.439 
+[2025-02-28 05:56:45][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23520 | comp: 0.334, data: 1.604 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.916 D: 0.085 pix2pix: 1.819 
+[2025-02-28 05:57:58][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23550 | comp: 0.332, data: 1.920 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.319 D: 0.302 pix2pix: 2.257 
+[2025-02-28 05:59:11][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23580 | comp: 0.333, data: 1.565 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.173 D: 0.379 pix2pix: 1.075 
+[2025-02-28 06:00:25][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23610 | comp: 0.332, data: 1.616 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.226 D: 0.065 pix2pix: 1.513 
+[2025-02-28 06:01:37][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23640 | comp: 0.334, data: 1.551 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.733 D: 0.066 pix2pix: 1.129 
+[2025-02-28 06:02:48][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23670 | comp: 0.331, data: 1.666 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.619 D: 0.586 pix2pix: 1.461 
+[2025-02-28 06:04:01][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23700 | comp: 0.331, data: 1.766 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.544 D: 0.105 pix2pix: 1.381 
+[2025-02-28 06:05:12][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23730 | comp: 0.333, data: 1.258 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.877 D: 0.371 pix2pix: 1.744 
+[2025-02-28 06:06:25][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23760 | comp: 0.332, data: 1.633 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.531 D: 0.116 pix2pix: 3.102 
+[2025-02-28 06:07:37][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23790 | comp: 0.332, data: 1.967 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.873 D: 0.163 pix2pix: 0.893 
+[2025-02-28 06:08:49][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23820 | comp: 0.332, data: 1.658 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.061 D: 0.025 pix2pix: 1.949 
+[2025-02-28 06:10:01][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23850 | comp: 0.333, data: 1.569 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.332 D: 0.662 pix2pix: 1.101 
+[2025-02-28 06:11:15][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23880 | comp: 0.333, data: 1.590 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 1.129 D: 0.066 pix2pix: 1.579 
+[2025-02-28 06:12:27][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23910 | comp: 0.332, data: 1.683 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.362 D: 0.218 pix2pix: 1.642 
+[2025-02-28 06:13:40][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23940 | comp: 0.333, data: 1.431 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.731 D: 0.101 pix2pix: 2.212 
+[2025-02-28 06:14:53][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 23970 | comp: 0.333, data: 1.735 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.947 D: 0.616 pix2pix: 1.097 
+[2025-02-28 06:16:08][ganslate.utils.trackers.training][INFO] - 
+-------------------- (iter: 24000 | comp: 0.334, data: 1.670 | lr_G: 0.0005000, lr_D: 0.0000200) --------------------
+G: 0.711 D: 0.199 pix2pix: 1.674 
+[2025-02-28 06:16:08][ganslate.engines.trainer][INFO] - Saving the model after 24000 iterations.
+[2025-02-28 06:16:15][ganslate.engines.validator_tester][INFO] - Validation started.
+[2025-02-28 06:23:08][ganslate.utils.trackers.validation_testing][INFO] - 
+-------------------- (Val at iter 24000) --------------------
+ssim: 0.790 mse: 8877.788 nmse: 0.198 psnr: 29.453 mae: 35.180 ssim_clean_mask: 0.896 mse_clean_mask: 15556.891 nmse_clean_mask: 0.149 psnr_clean_mask: 30.873 mae_clean_mask: 49.165 
