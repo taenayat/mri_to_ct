@@ -23,8 +23,8 @@ def procces_file(file, clean):
 
 if __name__ == "__main__":
 
-    input_dir = '/home/taha/Downloads/Panacea/mri_to_ct/mri_to_ct/25_02_26_thresh150/infer/saved'
-    # input_dir = '/home/taha/Downloads/Panacea/dataset/TEST/CT'
+    # input_dir = '/home/taha/Downloads/Panacea/mri_to_ct/mri_to_ct/24_12_24_final/infer/saved'
+    input_dir = '/home/taha/Downloads/Panacea/dataset/TEST/CT'
     clean = True
 
     if os.path.isfile(input_dir):

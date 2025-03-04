@@ -8,12 +8,15 @@ import pandas as pd
 
 # SCT_PATH = '/home/taha/Downloads/Panacea/mri_to_ct/mri_to_ct/24_12_24_final/infer/saved'
 # CT_PATH = '/home/taha/Downloads/Panacea/dataset/TEST/CT'
-SCT_PATH = '/mnt/homeGPU/tenayat/mri_to_ct/25_02_26_thresh150/infer/saved'
+
+# SCT_PATH_BASE = '/mnt/homeGPU/tenayat/mri_to_ct/25_02_28_thresh150_correctfunc/infer'
+# SCT_PATH_BASE = '/mnt/homeGPU/tenayat/MTT-Net/train_model/MTTNET_wave3DDiscriminator_results/epoch_120_Npatch_24_maxCT_3000/test'
+SCT_PATH_BASE = '/mnt/homeGPU/tenayat/mri_to_ct/24_12_04_squeeze/infer'
 CT_PATH = '/mnt/homeGPU/tenayat/data/TEST/CT'
-sct_dir = sorted([file for file in os.listdir(SCT_PATH) if file[-6:]=='nii.gz'], key = lambda x: x)
+sct_dir = sorted([file for file in os.listdir(os.path.join(SCT_PATH_BASE,'saved')) if file[-6:]=='nii.gz'], key = lambda x: x)
 ct_dir = sorted(os.listdir(CT_PATH), key = lambda x: x)
 ct_full_dir = [os.path.join(CT_PATH, ct_dir[idx]) for idx in range(len(ct_dir))]
-sct_full_dir = [os.path.join(SCT_PATH, sct_dir[idx]) for idx in range(len(sct_dir))]
+sct_full_dir = [os.path.join(SCT_PATH_BASE, 'saved', sct_dir[idx]) for idx in range(len(sct_dir))]
 
 def load_and_threshold(image_path, threshold=400):
     image = sitk.ReadImage(image_path, sitk.sitkInt16)
@@ -47,5 +50,5 @@ std_row.index = ["stddev"]
 
 # Append the new rows to the DataFrame
 df = pd.concat([df, average_row, std_row])
-os.makedirs('/mnt/homeGPU/tenayat/mri_to_ct/25_02_26_thresh150/infer/comparison', exist_ok=True)
-df.to_csv('/mnt/homeGPU/tenayat/mri_to_ct/25_02_26_thresh150/infer/comparison/skull_metrics.csv')
+os.makedirs(os.path.join(SCT_PATH_BASE,'comparison'), exist_ok=True)
+df.to_csv(os.path.join(SCT_PATH_BASE,'comparison', 'skull_metrics.csv'))
