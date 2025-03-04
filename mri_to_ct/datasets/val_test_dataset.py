@@ -48,15 +48,19 @@ class SynthRAD2023ValTestDataset(Dataset):
         MRI_image = sitk_utils.load(mri_sample)
         mask = sitk_utils.load(mask_sample)
 
-        threshold = -150
-        CT_image = remove_artifacts(CT_image, threshold=threshold)
+        # threshold = -150
+        # CT_image = remove_artifacts(CT_image, threshold=threshold)
 
         CT_tensor = sitk_utils.get_tensor(CT_image)
         MRI_tensor = sitk_utils.get_tensor(MRI_image)
         mask_tensor = sitk_utils.get_tensor(mask)
 
-        self.CT_min_value, self.CT_max_value = threshold, 3000
-        # self.CT_min_value, self.CT_max_value = -1024, 3000
+        # remove CT artifacts
+        threshold = -150
+        CT_tensor[CT_tensor < threshold] = -1024
+
+        # self.CT_min_value, self.CT_max_value = threshold, 3000
+        self.CT_min_value, self.CT_max_value = -1024, 3000
         CT_tensor = min_max_normalize(CT_tensor, self.CT_min_value, self.CT_max_value)
         MRI_tensor = z_score_squeeze(MRI_tensor)
 

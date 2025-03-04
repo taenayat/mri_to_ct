@@ -85,15 +85,23 @@ class SynthRAD2023TrainDataset(Dataset):
                                         sitk_utils.get_torch_like_size(MRI_image),
                                         self.patch_size))
 
-        threshold = -150
-        CT_image = remove_artifacts(CT_image, threshold=threshold)
+        # remove CT artifacts
+        # threshold = -150
+        # CT_image = remove_artifacts(CT_image, threshold=threshold)
 
         CT_tensor = sitk_utils.get_tensor(CT_image)
         MRI_tensor = sitk_utils.get_tensor(MRI_image)
+
+        # remove CT artifacts
+        threshold = -150
+        CT_tensor[CT_tensor < threshold] = -1024
+
         # MRI_min_value, MRI_max_value = MRI_tensor.min(), MRI_tensor.max()
         MRI_tensor = z_score_squeeze(MRI_tensor)
-        # CT_tensor = min_max_normalize(CT_tensor, -1024, 3000)
-        CT_tensor = min_max_normalize(CT_tensor, threshold, 3000)
+        CT_tensor = min_max_normalize(CT_tensor, -1024, 3000)
+        # CT_tensor = min_max_normalize(CT_tensor, threshold, 3000)
+
+
 
         if self.transformations:
             CT_tensor = CT_tensor.unsqueeze(0)

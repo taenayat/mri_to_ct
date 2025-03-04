@@ -1,19 +1,28 @@
+infer:
+  checkpointing:
+    load_iter: 24000
+  dataset:
+    _target_: project.datasets.infer_dataset.SynthRAD2023InferDataset
+    num_workers: 0
+    root: /mnt/homeGPU/tenayat/data/TEST
+  sliding_window:
+    overlap: ${val.sliding_window.overlap}
+    window_size: ${train.dataset.patch_size}
 project: ./mri_to_ct/
 test:
   checkpointing:
-    load_iter: 22800
+    load_iter: 24000
   dataset:
     _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
     num_workers: 0
     root: /mnt/homeGPU/tenayat/data/TEST
   sliding_window:
+    overlap: ${val.sliding_window.overlap}
     window_size: ${train.dataset.patch_size}
 train:
   batch_size: 1
   checkpointing:
     freq: 1200
-    load_iter: 15600
-    load_optimizers: true
   cuda: true
   dataset:
     _target_: project.datasets.train_dataset.SynthRAD2023TrainDataset
@@ -25,20 +34,24 @@ train:
     - 160
     pin_memory: true
     root: /mnt/homeGPU/tenayat/data/TRAIN
-    unpaired: true
   gan:
-    _target_: ganslate.nn.gans.unpaired.CycleGAN
+    _target_: ganslate.nn.gans.paired.Pix2PixConditionalGAN
     discriminator:
-      _target_: ganslate.nn.discriminators.PatchGAN3D
+      _target_: ganslate.nn.discriminators.SelfAttentionPatchGAN3D
       in_channels:
-        B: 1
+        B: 2
       n_layers: 2
     generator:
-      _target_: ganslate.nn.generators.Vnet3D
+      _target_: ganslate.nn.generators.SelfAttentionVnet3D
       down_blocks:
       - 2
       - 2
       - 3
+      enable_attention_block:
+      - false
+      - true
+      - true
+      first_layer_channels: 32
       in_out_channels:
         AB:
         - 1
@@ -50,12 +63,9 @@ train:
       use_inverse: false
       use_memory_saving: false
     optimizer:
-      lambda_AB: 5.0
-      lambda_BA: 5.0
-      lambda_identity: 0
+      lambda_pix2pix: 60.0
       lr_D: 2.0e-05
       lr_G: 0.0005
-      proportion_ssim: 0
   logging:
     freq: 30
     tensorboard: true
@@ -64,7 +74,7 @@ train:
   mixed_precision: false
   n_iters: 24000
   n_iters_decay: 0
-  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/24_12_04_squeeze
+  output_dir: /mnt/homeGPU/tenayat/mri_to_ct/25_02_28_thresh150_correctfunc
 val:
   dataset:
     _target_: project.datasets.val_test_dataset.SynthRAD2023ValTestDataset
@@ -73,16 +83,8 @@ val:
     root: /mnt/homeGPU/tenayat/data/VAL
   freq: ${train.checkpointing.freq}
   metrics:
-    cycle_metrics: true
+    cycle_metrics: false
     save_to_csv: true
   sliding_window:
+    overlap: 0.5
     window_size: ${train.dataset.patch_size}
-infer:
-    checkpointing:
-        load_iter: 22800
-    dataset:
-        _target_: project.datasets.infer_dataset.SynthRAD2023InferDataset
-        root: "/mnt/homeGPU/tenayat/data/TEST"
-        num_workers: 0
-    sliding_window:
-        window_size: ${train.dataset.patch_size}

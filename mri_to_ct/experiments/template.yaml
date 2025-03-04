@@ -87,4 +87,5 @@ test:
 #         root: "/mnt/homeGPU/tenayat/data/TEST"
 #         num_workers: 0
 #     sliding_window:
-#         window_size: ${train.dataset.patch_size}
+        # overlap: ${val.sliding_window.overlap}
+        # window_size: ${train.dataset.patch_size}
