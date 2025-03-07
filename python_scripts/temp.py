@@ -59,25 +59,48 @@
 
 
 
+# import os
+# train_dir = os.listdir('data/TRAIN/CT')
+# val_dir = os.listdir('data/VAL/CT')
+# test_dir = os.listdir('data/TEST/CT')
+
+# train_name = [item.split('_')[0] for item in train_dir]
+# val_name = [item.split('_')[0] for item in val_dir]
+# test_name = [item.split('_')[0] for item in test_dir]
+
+# with open('MTT-Net/data/headneck_train.txt', 'w') as f:
+#     for item in train_name:
+#         f.write(item + "\n")
+# with open('MTT-Net/data/headneck_val.txt', 'w') as f:
+#     for item in val_name:
+#         f.write(item + "\n")
+# with open('MTT-Net/data/headneck_test.txt', 'w') as f:
+#     for item in test_name:
+#         f.write(item + "\n")
+
+
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.image as mpimg
 import os
-train_dir = os.listdir('data/TRAIN/CT')
-val_dir = os.listdir('data/VAL/CT')
-test_dir = os.listdir('data/TEST/CT')
 
-train_name = [item.split('_')[0] for item in train_dir]
-val_name = [item.split('_')[0] for item in val_dir]
-test_name = [item.split('_')[0] for item in test_dir]
+# Load the image
+# experiments = ['24_11_28_freshstart','24_12_02_new_lr','24_12_06_new_patch','24_12_04_squeeze',
+#     '24_12_09_pix2pix', '24_12_15_dynamic_padding', '24_12_24_final','25_02_28_thresh150_correctfunc']
+experiments = ['24_12_18_vnet']
+sub_experiment = 'first_layer'
 
-with open('MTT-Net/data/headneck_train.txt', 'w') as f:
-    for item in train_name:
-        f.write(item + "\n")
-with open('MTT-Net/data/headneck_val.txt', 'w') as f:
-    for item in val_name:
-        f.write(item + "\n")
-with open('MTT-Net/data/headneck_test.txt', 'w') as f:
-    for item in test_name:
-        f.write(item + "\n")
-
-
-
+for experiment in experiments:
+    # image_path = f"mri_to_ct/{experiment}/test/images/0_real_A-fake_B-real_B-clean_mask.png"
+    image_path = f"mri_to_ct/{experiment}/{sub_experiment}/test/images/0_real_A-fake_B-real_B-clean_mask.png"
+    img = mpimg.imread(image_path)
+    height, width = img.shape[:2]
+    new_width = int(width * 0.75)
+    cropped_img = img[:, :new_width]
+    
+    # Save the cropped images in experiment-specific folders
+    os.makedirs("saved_images", exist_ok=True)
+    plt.imsave(f"saved_images/{experiment}_{sub_experiment}.png", cropped_img)
 

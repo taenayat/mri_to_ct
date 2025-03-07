@@ -31,16 +31,20 @@ def generate_metrics_path(filepath):
             experiment_name = parts[-1].replace('.yaml', '')
             base_path = '/'.join(parts[:-2])  # Up to "mri_to_ct"
             return f"{base_path}/{experiment_name}/test/metrics.csv"
-    return "Invalid Path"
+    else:
+        return f"{filepath}/test/metrics.csv"
+    # return "Invalid Path"
 
 def extract_name(filepath):
+    parts = filepath.split('/')
     if ".yaml" in filepath:
-        parts = filepath.split('/')
         if "experiments" in parts:
             return parts[-1].replace('.yaml', '')
         else:
             return parts[-3] + "_" + parts[-1].replace('.yaml', '')
-    return "Invalid Path"
+    else:
+        return parts[-2] + '_' + parts[-1]
+    # return "Invalid Path"
 
 # print(YAML_PATH)
 # print(generate_metrics_path(YAML_PATH))
